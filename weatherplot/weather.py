@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 
 from gears import reverse_timestamp
 
+from ..libtbx.phil  import parse
+from ..libtbx.utils import Sorry
 
 
 message = ''' script to get a sense of the computational performance of every
@@ -17,6 +19,7 @@ dials.stills_process. The information is read in from the debug files created
 by dials.stills_process.  Example usage on cxic0415 processed demo data -
 libtbx.python weather.py input_path=cxic0415/output/debug
 '''
+
 
 phil_scope = parse('''
   input_path = .
@@ -45,6 +48,7 @@ phil_scope = parse('''
     .type = str
     .help = Default name of pickled matplotlib plot saved to disk
 ''')
+
 
 def params_from_phil(args):
     user_phil = []
