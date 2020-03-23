@@ -137,7 +137,7 @@ def run(params):
 
 
 def plot(*args):
-    params = params_from_phil(sys.argv[1:])
+    params = params_from_phil(args)
     run(params)
 
 
