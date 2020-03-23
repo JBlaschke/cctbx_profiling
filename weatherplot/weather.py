@@ -7,9 +7,9 @@ import sys
 import matplotlib.pyplot as plt
 
 from gears import reverse_timestamp
-
 from ..libtbx.phil  import parse
 from ..libtbx.utils import Sorry
+
 
 
 message = ''' script to get a sense of the computational performance of every
@@ -19,6 +19,7 @@ dials.stills_process. The information is read in from the debug files created
 by dials.stills_process.  Example usage on cxic0415 processed demo data -
 libtbx.python weather.py input_path=cxic0415/output/debug
 '''
+
 
 
 phil_scope = parse('''
@@ -50,79 +51,94 @@ phil_scope = parse('''
 ''')
 
 
+
 def params_from_phil(args):
     user_phil = []
     for arg in args:
         if os.path.isfile(arg):
             user_phil.append(parse(file_name=arg))
-    else:
-        try:
-            user_phil.append(parse(arg))
-      except Exception as e:
-          raise Sorry("Unrecognized argument: %s"%arg)
-  params = phil_scope.fetch(sources=user_phil).extract()
-  return params
+        else:
+            try:
+                user_phil.append(parse(arg))
+            except Exception as e:
+                raise Sorry("Unrecognized argument: %s"%arg)
+
+    params = phil_scope.fetch(sources=user_phil).extract()
+    return params
+
+
 
 def run(params):
+
     counter = 0
     reference = None
-    root=params.input_path
+    root = params.input_path
     fig_object = plt.figure()
     good_total = fail_total = 0
+
     for filename in os.listdir(root):
         if os.path.splitext(filename)[1] != '.txt': continue
-    if 'debug' not in filename: continue
-    fail_timepoints = []
-    good_timepoints = []
-    rank = int(filename.split('_')[1].split('.')[0])
-    counter += 1
-    print (filename)
-    for line in open(os.path.join(root,filename)):
-        try:
-            hostname, psanats, ts, status, result = line.strip().split(',')
-      except ValueError:
-          continue
-      if reference is None:
-          sec, ms = reverse_timestamp(ts)
-        reference = sec+ms*1e-3
+        if 'debug' not in filename: continue
+        fail_timepoints = []
+        good_timepoints = []
 
-        if status in ['stop','done','fail']:
+        rank = int(filename.split('_')[1].split('.')[0])
+        counter += 1
+
+        for line in open(os.path.join(root,filename)):
+
+            try:
+                hostname, psanats, ts, status, result = line.strip().split(',')
+            except ValueError:
+                continue
+
+            if reference is None:
+                sec, ms = reverse_timestamp(ts)
+                reference = sec+ms*1e-3
+  
+            if status in ['stop','done','fail']:
+                sec, ms = reverse_timestamp(ts)
+                if status == 'done':
+                    good_timepoints.append((sec + ms*1.e-3)-reference)
+                else:
+                    fail_timepoints.append((sec + ms*1.e-3)-reference)
+                ok = True
+            else:
+                ok = False
+
+        plt.plot(fail_timepoints, [rank]*len(fail_timepoints), 'b.')
+        plt.plot(good_timepoints, [rank]*len(good_timepoints), 'g.')
+
+        fail_total += len(fail_timepoints)
+        good_total += len(good_timepoints)
+        if not ok:
             sec, ms = reverse_timestamp(ts)
-        if status == 'done':
-            good_timepoints.append((sec + ms*1.e-3)-reference)
-        else:
-            fail_timepoints.append((sec + ms*1.e-3)-reference)
-        ok = True
-      else:
-          ok = False
-    plt.plot(fail_timepoints, [rank]*len(fail_timepoints), 'b.')
-    plt.plot(good_timepoints, [rank]*len(good_timepoints), 'g.')
-    fail_total += len(fail_timepoints)
-    good_total += len(good_timepoints)
-    if not ok:
-        sec, ms = reverse_timestamp(ts)
-        plt.plot([(sec+ms*1e-3) - reference], [rank], 'rx')
-    #if counter > 100: break
-
+            plt.plot([(sec+ms*1e-3) - reference], [rank], 'rx')
+        #if counter > 100: break
+  
     fail_deltas = [fail_timepoints[i+1] - fail_timepoints[i] for i in range(len(fail_timepoints)-1)]
     good_deltas = [good_timepoints[i+1] - good_timepoints[i] for i in range(len(good_timepoints)-1)]
-    if fail_deltas: print("Five number summary of %d fail image processing times:"%fail_total, five_number_summary(flex.double(fail_deltas)))
-    if good_deltas: print("Five number summary of %d good image processing times:"%good_total, five_number_summary(flex.double(good_deltas)))
-
+    # if fail_deltas: print("Five number summary of %d fail image processing times:"%fail_total, five_number_summary(flex.double(fail_deltas)))
+    # if good_deltas: print("Five number summary of %d good image processing times:"%good_total, five_number_summary(flex.double(good_deltas)))
+  
     for i in range(params.num_nodes):
-        plt.plot([0,params.wall_time], [i*params.num_cores_per_node-0.5, i*params.num_cores_per_node-0.5], 'r-')
-        plt.xlabel('Wall time (sec)')
-        plt.ylabel('MPI Rank Number')
-        plt.title(params.plot_title)
-        if params.pickle_plot:
-            from libtbx.easy_pickle import dump
-    dump('%s'%params.pickle_filename, fig_object)
+      plt.plot([0,params.wall_time], [i*params.num_cores_per_node-0.5, i*params.num_cores_per_node-0.5], 'r-')
+
+    plt.xlabel('Wall time (sec)')
+    plt.ylabel('MPI Rank Number')
+    plt.title(params.plot_title)
+
+    if params.pickle_plot:
+        from libtbx.easy_pickle import dump
+        dump('%s'%params.pickle_filename, fig_object)
     if params.show_plot:
         plt.show()
+
+
 
 if __name__ == '__main__':
     if '--help' in sys.argv[1:] or '-h' in sys.argv[1:]:
         print (message)
-    exit()
+        exit()
     params = params_from_phil(sys.argv[1:])
-run(params)
+    run(params)
