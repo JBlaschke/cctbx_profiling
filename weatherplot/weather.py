@@ -136,6 +136,12 @@ def run(params):
 
 
 
+def plot(*args):
+    params = params_from_phil(sys.argv[1:])
+    run(params)
+
+
+
 if __name__ == '__main__':
     if '--help' in sys.argv[1:] or '-h' in sys.argv[1:]:
         print (message)
