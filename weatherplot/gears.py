@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
-from time import strptime
-
+from time     import strptime
+from calendar import timegm
 
 
 def reverse_timestamp(timestamp):
