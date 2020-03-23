@@ -6,9 +6,9 @@ import os
 import sys
 import matplotlib.pyplot as plt
 
-from gears import reverse_timestamp
-from ..libtbx.phil  import parse
-from ..libtbx.utils import Sorry
+from .gears        import reverse_timestamp
+from .libtbx.phil  import parse
+from .libtbx.utils import Sorry
 
 
 
