@@ -68,6 +68,75 @@ def params_from_phil(args):
 
 
 
+def parse_dir(**params):
+
+    counter = 0
+    reference = None
+    root = params["input_path"]
+    good_total = fail_total = 0
+
+    data = dict();
+
+    for filename in os.listdir(root):
+        if os.path.splitext(filename)[1] != '.txt': continue
+        if 'debug' not in filename: continue
+        fail_timepoints = []
+        good_timepoints = []
+
+        rank = int(filename.split('_')[1].split('.')[0])
+        counter += 1
+
+        for line in open(os.path.join(root,filename)):
+
+            try:
+                hostname, psanats, ts, status, result = line.strip().split(',')
+            except ValueError:
+                continue
+
+            if reference is None:
+                sec, ms = reverse_timestamp(ts)
+                reference = sec+ms*1e-3
+  
+            if status in ['stop','done','fail']:
+                sec, ms = reverse_timestamp(ts)
+                if status == 'done':
+                    good_timepoints.append((sec + ms*1.e-3)-reference)
+                else:
+                    fail_timepoints.append((sec + ms*1.e-3)-reference)
+                ok = True
+            else:
+                ok = False
+
+        failed_x = fail_timepoints
+        failed_y = [rank]*len(fail_timepoints)
+        good_x   = good_timepoints
+        good_y   = [rank]*len(good_timepoints)
+
+        fail_total += len(fail_timepoints)
+        good_total += len(good_timepoints)
+
+        notok_x = None
+        notok_y = None
+        if not ok:
+            sec, ms = reverse_timestamp(ts)
+            notok_x = [(sec+ms*1e-3) - reference]
+            notok_y = [rank]
+        #if counter > 100: break
+
+        data[filename] = {"good_total": good_total,
+                          "fail_total": fail_total,
+                          "good_x": good_x,
+                          "good_y": good_y,
+                          "failed_x": failed_x,
+                          "failed_y": failed_y,
+                          "ok": ok,
+                          "notok_x": notok_x,
+                          "notok_y": notok_y}
+
+    return data
+
+
+
 def run(params):
 
     counter = 0
@@ -116,13 +185,13 @@ def run(params):
             plt.plot([(sec+ms*1e-3) - reference], [rank], 'rx')
         #if counter > 100: break
   
-    fail_deltas = [fail_timepoints[i+1] - fail_timepoints[i] for i in range(len(fail_timepoints)-1)]
-    good_deltas = [good_timepoints[i+1] - good_timepoints[i] for i in range(len(good_timepoints)-1)]
+    # fail_deltas = [fail_timepoints[i+1] - fail_timepoints[i] for i in range(len(fail_timepoints)-1)]
+    # good_deltas = [good_timepoints[i+1] - good_timepoints[i] for i in range(len(good_timepoints)-1)]
     # if fail_deltas: print("Five number summary of %d fail image processing times:"%fail_total, five_number_summary(flex.double(fail_deltas)))
     # if good_deltas: print("Five number summary of %d good image processing times:"%good_total, five_number_summary(flex.double(good_deltas)))
   
     for i in range(params.num_nodes):
-      plt.plot([0,params.wall_time], [i*params.num_cores_per_node-0.5, i*params.num_cores_per_node-0.5], 'r-')
+        plt.plot([0,params.wall_time], [i*params.num_cores_per_node-0.5, i*params.num_cores_per_node-0.5], 'r-')
 
     plt.xlabel('Wall time (sec)')
     plt.ylabel('MPI Rank Number')
@@ -139,6 +208,12 @@ def run(params):
 def plot(*args):
     params = params_from_phil(args)
     run(params)
+
+
+
+def load_dir(*args):
+    params = params_from_phil(args)
+    return parse_dir(**params.__dict__)
 
 
 
