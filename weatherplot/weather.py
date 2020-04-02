@@ -76,7 +76,7 @@ def combine_dir(data_dict):
                 "good_y": list(),
                 "failed_x": list(),
                 "failed_y": list(),
-                "notok": list()
+                "notok": list(),
                 "notok_x": list(),
                 "notok_y": list()}
 
