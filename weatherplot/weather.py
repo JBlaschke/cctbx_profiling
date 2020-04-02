@@ -210,17 +210,22 @@ def run(**params):
 
 
 def plot(*args, **kwargs):
-    params = params_from_phil(args)
-    run(params, **kwargs)
+
+    if len(args) > 0:
+        params = params_from_phil(args)
+        return run(params, **kwargs)
+
+    return run(**kwargs)
 
 
 
 def load_dir(*args, **kwargs):
 
-    
+    if len(args) > 0:
+        params = params_from_phil(args)
+        return parse_dir(**params.__dict__, **kwargs)
 
-    params = params_from_phil(args)
-    return parse_dir(**params.__dict__, **kwargs)
+    return parse_dir(**kwargs)
 
 
 
