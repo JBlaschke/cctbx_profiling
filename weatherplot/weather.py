@@ -68,6 +68,39 @@ def params_from_phil(args):
 
 
 
+def combine_dir(data_dict)
+
+    combined = {"good_total": list(),
+                "fail_total": list(),
+                "good_x": list(),
+                "good_y": list(),
+                "failed_x": list(),
+                "failed_y": list(),
+                "notok": list()
+                "notok_x": list(),
+                "notok_y": list()}
+
+    for file_name in data_dict:
+
+        data = data_dict[file_name]
+
+        combined["good_x"]     += data["good_x"]
+        combined["good_y"]     += data["good_y"]
+        combined["failed_x"]   += data["failed_x"]
+        combined["failed_y"]   += data["failed_y"]
+        combined["good_total"] += data["good_total"]
+        combined["fail_total"] += data["fail_total"]
+        combined["notok_x"]    += data["notok_x"]
+        combined["notok_y"]    += data["notok_x"]
+
+        if not data["ok"]:
+            combined["notok"].append(file_name)
+
+
+    return combined
+
+
+
 def parse_dir(**params):
 
     counter = 0
@@ -137,53 +170,18 @@ def parse_dir(**params):
 
 
 
-def run(params):
+def run(**params):
 
-    counter = 0
-    reference = None
-    root = params.input_path
+    data          = parse_dir(params)
+    combined_data = combine_dir(data)
+
     fig_object = plt.figure()
-    good_total = fail_total = 0
+    plt.plot(combined_data["good_x"], combined_data["good_y"], 'g.')
+    plt.plot(combined_data["failed_x"], combined_data["failed_y"], "b.")
 
-    for filename in os.listdir(root):
-        if os.path.splitext(filename)[1] != '.txt': continue
-        if 'debug' not in filename: continue
-        fail_timepoints = []
-        good_timepoints = []
+    if len(combined_data["notok"]) > 0
+        plt.plot(combined_data["notok_x"], combined_data["notok_y"], "rx")
 
-        rank = int(filename.split('_')[1].split('.')[0])
-        counter += 1
-
-        for line in open(os.path.join(root,filename)):
-
-            try:
-                hostname, psanats, ts, status, result = line.strip().split(',')
-            except ValueError:
-                continue
-
-            if reference is None:
-                sec, ms = reverse_timestamp(ts)
-                reference = sec+ms*1e-3
-  
-            if status in ['stop','done','fail']:
-                sec, ms = reverse_timestamp(ts)
-                if status == 'done':
-                    good_timepoints.append((sec + ms*1.e-3)-reference)
-                else:
-                    fail_timepoints.append((sec + ms*1.e-3)-reference)
-                ok = True
-            else:
-                ok = False
-
-        plt.plot(fail_timepoints, [rank]*len(fail_timepoints), 'b.')
-        plt.plot(good_timepoints, [rank]*len(good_timepoints), 'g.')
-
-        fail_total += len(fail_timepoints)
-        good_total += len(good_timepoints)
-        if not ok:
-            sec, ms = reverse_timestamp(ts)
-            plt.plot([(sec+ms*1e-3) - reference], [rank], 'rx')
-        #if counter > 100: break
   
     # fail_deltas = [fail_timepoints[i+1] - fail_timepoints[i] for i in range(len(fail_timepoints)-1)]
     # good_deltas = [good_timepoints[i+1] - good_timepoints[i] for i in range(len(good_timepoints)-1)]
@@ -191,7 +189,10 @@ def run(params):
     # if good_deltas: print("Five number summary of %d good image processing times:"%good_total, five_number_summary(flex.double(good_deltas)))
   
     for i in range(params.num_nodes):
-        plt.plot([0,params.wall_time], [i*params.num_cores_per_node-0.5, i*params.num_cores_per_node-0.5], 'r-')
+        plt.plot([0, params.wall_time], 
+                 [i*params.num_cores_per_node - 0.5,
+                  i*params.num_cores_per_node - 0.5], "r-"
+                 )
 
     plt.xlabel('Wall time (sec)')
     plt.ylabel('MPI Rank Number')
@@ -200,6 +201,7 @@ def run(params):
     if params.pickle_plot:
         from libtbx.easy_pickle import dump
         dump('%s'%params.pickle_filename, fig_object)
+
     if params.show_plot:
         plt.show()
 
