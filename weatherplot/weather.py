@@ -68,7 +68,7 @@ def params_from_phil(args):
 
 
 
-def combine_dir(data_dict)
+def combine_dir(data_dict):
 
     combined = {"good_total": list(),
                 "fail_total": list(),
