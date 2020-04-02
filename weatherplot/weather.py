@@ -103,6 +103,29 @@ def combine_dir(data_dict):
 
 
 
+def compute_deltas(data_dict):
+
+    good_deltas   = list()
+    failed_deltas = list()
+
+    for file_name in data_dict:
+
+        data = data_dict[file_name]
+
+        good_t   = data["good_x"]
+        failed_t = data["failed_x"]
+
+        good_deltas += [
+            good_t[i+1] - good_t[i] for i in range(len(good_t) - 1)
+        ]
+        failed_deltas += [
+            failed_t[i+1] - failed_t[i] for i in range(len(failed_t) - 1)
+        ]
+
+    return good_deltas, failed_deltas
+
+
+
 def parse_dir(**params):
 
     counter = 0
@@ -131,7 +154,7 @@ def parse_dir(**params):
             if reference is None:
                 sec, ms = reverse_timestamp(ts)
                 reference = sec+ms*1e-3
-  
+
             if status in ['stop','done','fail']:
                 sec, ms = reverse_timestamp(ts)
                 if status == 'done':
@@ -184,14 +207,14 @@ def run(**params):
     if len(combined_data["notok"]) > 0:
         plt.plot(combined_data["notok_x"], combined_data["notok_y"], "rx")
 
-  
+
     # fail_deltas = [fail_timepoints[i+1] - fail_timepoints[i] for i in range(len(fail_timepoints)-1)]
     # good_deltas = [good_timepoints[i+1] - good_timepoints[i] for i in range(len(good_timepoints)-1)]
     # if fail_deltas: print("Five number summary of %d fail image processing times:"%fail_total, five_number_summary(flex.double(fail_deltas)))
     # if good_deltas: print("Five number summary of %d good image processing times:"%good_total, five_number_summary(flex.double(good_deltas)))
-  
+
     for i in range(params.num_nodes):
-        plt.plot([0, params.wall_time], 
+        plt.plot([0, params.wall_time],
                  [i*params.num_cores_per_node - 0.5,
                   i*params.num_cores_per_node - 0.5], "r-"
                  )
