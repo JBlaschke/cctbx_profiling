@@ -84,17 +84,19 @@ def combine_dir(data_dict):
 
         data = data_dict[file_name]
 
-        combined["good_x"]     += data["good_x"]
-        combined["good_y"]     += data["good_y"]
-        combined["failed_x"]   += data["failed_x"]
-        combined["failed_y"]   += data["failed_y"]
-        combined["good_total"] += data["good_total"]
-        combined["fail_total"] += data["fail_total"]
-        combined["notok_x"]    += data["notok_x"]
-        combined["notok_y"]    += data["notok_x"]
+        combined["good_x"]   += data["good_x"]
+        combined["good_y"]   += data["good_y"]
+        combined["failed_x"] += data["failed_x"]
+        combined["failed_y"] += data["failed_y"]
+
+        combined["good_total"].append(data["good_total"])
+        combined["fail_total"].append(data["fail_total"])
 
         if not data["ok"]:
             combined["notok"].append(file_name)
+            combined["notok_x"] += data["notok_x"]
+            combined["notok_y"] += data["notok_x"]
+
 
 
     return combined
@@ -176,10 +178,10 @@ def run(**params):
     combined_data = combine_dir(data)
 
     fig_object = plt.figure()
-    plt.plot(combined_data["good_x"], combined_data["good_y"], 'g.')
+    plt.plot(combined_data["good_x"],   combined_data["good_y"], 'g.')
     plt.plot(combined_data["failed_x"], combined_data["failed_y"], "b.")
 
-    if len(combined_data["notok"]) > 0
+    if len(combined_data["notok"]) > 0:
         plt.plot(combined_data["notok_x"], combined_data["notok_y"], "rx")
 
   
@@ -207,15 +209,18 @@ def run(**params):
 
 
 
-def plot(*args):
+def plot(*args, **kwargs):
     params = params_from_phil(args)
-    run(params)
+    run(params, **kwargs)
 
 
 
-def load_dir(*args):
+def load_dir(*args, **kwargs):
+
+    
+
     params = params_from_phil(args)
-    return parse_dir(**params.__dict__)
+    return parse_dir(**params.__dict__, **kwargs)
 
 
 
