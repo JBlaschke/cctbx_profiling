@@ -103,6 +103,22 @@ def combine_dir(data_dict):
 
 
 
+def combine_totals(data_dict):
+
+    good_total = 0
+    fail_total = 0
+
+    for file_name in data_dict:
+
+        data = data_dict[file_name]
+
+        good_total += data["good_total"]
+        fail_total += data["fail_total"]
+
+    return good_total, fail_total
+
+
+
 def compute_deltas(data_dict):
 
     good_deltas   = list()
