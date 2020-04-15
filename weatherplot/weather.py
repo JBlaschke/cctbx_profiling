@@ -142,23 +142,18 @@ def compute_deltas(data_dict):
 
 
 
-def parse_dir(**params):
+def scan_reference(root):
 
-    counter = 0
+    # make min work with "None"
+    min_none = lambda x, y: (None if y==None else y) if x==None \
+                       else (x if y==None else min(x, y))
+
     reference = None
-    root = params["input_path"]
-    good_total = fail_total = 0
-
-    data = dict();
 
     for filename in os.listdir(root):
+
         if os.path.splitext(filename)[1] != '.txt': continue
         if 'debug' not in filename: continue
-        fail_timepoints = []
-        good_timepoints = []
-
-        rank = int(filename.split('_')[1].split('.')[0])
-        counter += 1
 
         for line in open(os.path.join(root,filename)):
 
@@ -167,11 +162,45 @@ def parse_dir(**params):
             except ValueError:
                 continue
 
-            if reference is None:
-                sec, ms = reverse_timestamp(ts)
-                reference = sec+ms*1e-3
+            sec, ms = reverse_timestamp(ts)
+            ref_loc = sec + ms*1e-3
 
-            if status in ['stop','done','fail']:
+            reference = min_none(reference, ref_loc)
+
+    return reference
+
+
+
+def parse_dir(**params):
+
+    counter = 0
+    root = params["input_path"]
+    good_total = fail_total = 0
+
+    # scan for reference time => the first logged time (which includes first IO)
+    reference = scan_reference(root)
+
+    data = dict();
+
+    for filename in os.listdir(root):
+
+        if os.path.splitext(filename)[1] != '.txt': continue
+        if 'debug' not in filename: continue
+
+        fail_timepoints = []
+        good_timepoints = []
+
+        rank = int(filename.split('_')[1].split('.')[0])
+        counter += 1
+
+        for line in open(os.path.join(root, filename)):
+
+            try:
+                hostname, psanats, ts, status, result = line.strip().split(',')
+            except ValueError:
+                continue
+
+            if status in ['stop', 'done', 'fail']:
                 sec, ms = reverse_timestamp(ts)
                 if status == 'done':
                     good_timepoints.append((sec + ms*1.e-3)-reference)
@@ -193,7 +222,7 @@ def parse_dir(**params):
         notok_y = None
         if not ok:
             sec, ms = reverse_timestamp(ts)
-            notok_x = [(sec+ms*1e-3) - reference]
+            notok_x = [(sec + ms*1e-3) - reference]
             notok_y = [rank]
         #if counter > 100: break
 
