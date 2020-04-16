@@ -175,7 +175,6 @@ def parse_dir(**params):
 
     counter = 0
     root = params["input_path"]
-    good_total = fail_total = 0
 
     # scan for reference time => the first logged time (which includes first IO)
     reference = scan_reference(root)
@@ -215,8 +214,8 @@ def parse_dir(**params):
         good_x   = good_timepoints
         good_y   = [rank]*len(good_timepoints)
 
-        fail_total += len(fail_timepoints)
-        good_total += len(good_timepoints)
+        fail_total = len(fail_timepoints)
+        good_total = len(good_timepoints)
 
         notok_x = None
         notok_y = None
