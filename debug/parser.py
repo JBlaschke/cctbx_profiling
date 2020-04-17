@@ -153,6 +153,13 @@ class EventParser(object):
                 = self.filter_result(event_raw, "integrate_start")
             ev.integrate_start = self.get_time(ts)
 
+            ev.ok = True
+            ev.lock()
+
             events.append(ev)
+
+
+        # TODO: what will we do with "broken" events?
+
 
         return events
