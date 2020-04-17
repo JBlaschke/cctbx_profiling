@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 class WeatherStats(object):
-    
+
     @staticmethod
     def compute_deltas(data_dict):
 
