@@ -124,3 +124,46 @@ class Event(object):
             self._psanats = value
         else:
             raise WriteToLockedEventError()
+
+
+    @property
+    def status(self):
+        return self._status
+
+
+    @status.setter
+    def status(self, value):
+        if not self._locked:
+            self._status = value
+        else:
+            raise WriteToLockedEventError()
+
+
+    def __repr__(self):
+
+        str_repr =  f"Event({self.start}, {self.finish})"
+
+        if hasattr(self, "spotfind_start"):
+            str_repr += f"\n  +-> spotfind_start = {self.spotfind_start}"
+
+        if hasattr(self, "index_start"):
+            str_repr += f"\n  +-> index_start = {self.index_start}"
+
+        if hasattr(self, "refine_start"):
+            str_repr += f"\n  +-> refine_start = {self.refine_start}"
+
+        if hasattr(self, "integrate_start"):
+            str_repr += f"\n  +-> integrate_start = {self.integrate_start}"
+
+        if hasattr(self, "hostname"):
+            str_repr += f"\n  +-> hostname = {self.hostname}"
+
+        if hasattr(self, "psanats"):
+            str_repr += f"\n  +-> psanats = {self.psanats}"
+
+        if hasattr(self, "status"):
+            str_repr += f"\n  +-> status = {self.status}"
+
+        str_repr += f"\n  +-> is locked = {self.locked}"
+
+        return str_repr

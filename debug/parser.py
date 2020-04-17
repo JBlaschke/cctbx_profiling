@@ -36,6 +36,32 @@ class EventParser(object):
         return end_index, event_ok, event_lines
 
 
+    @staticmethod
+    def filter_result(event_data, target):
+
+        for hostname, psanats, ts, status, result  in event_data:
+            if result in target:
+                return hostname, psanats, ts, status, result
+
+        return None
+
+
+    @staticmethod
+    def filter_status(event_data, target):
+
+        for hostname, psanats, ts, status, result  in event_data:
+            if status in target:
+                return hostname, psanats, ts, status, result
+
+        return None
+
+
+    @staticmethod
+    def get_time(ts):
+        sec, ms = reverse_timestamp(ts)
+        return sec + ms*1.e-3
+
+
     def __init__(self, root, file_name):
 
         self._valid = False
@@ -82,13 +108,51 @@ class EventParser(object):
         events_raw = list()
 
         while True:
-            end_index, event_ok, event_lines = self.scan_event(self.lines[offset:], offset)
+            end_index, event_ok, event_lines \
+                = self.scan_event(self.lines[offset:], offset)
 
             if event_ok:
                 events_raw.append(event_lines)
 
-            offset += end_index + 1
+            offset += end_index + 1  # +1 => point the offest at the _next_ index
             if offset > len(self.lines):
                 break
 
-        return events_raw
+        events = list()
+
+        for event_raw in events_raw:
+
+            hostname, psanats, ts_start, status, result \
+                = self.filter_result(event_raw, "start")
+
+            start_time = self.get_time(ts_start)
+
+            hostname, psanats, ts_finish, status, result \
+                = self.filter_status(event_raw, ["stop", "done", "fail"])
+
+            finish_time = self.get_time(ts_finish)
+
+            ev = Event(start_time, finish_time)
+            ev.hostname = hostname
+            ev.psanats  = psanats
+            ev.status   = status
+
+            hostname, psanats, ts, status, result \
+                = self.filter_result(event_raw, "spotfind_start")
+            ev.spotfind_start = self.get_time(ts)
+
+            hostname, psanats, ts, status, result \
+                = self.filter_result(event_raw, "index_start")
+            ev.index_start = self.get_time(ts)
+
+            hostname, psanats, ts, status, result \
+                = self.filter_result(event_raw, "refine_start")
+            ev.refine_start = self.get_time(ts)
+
+            hostname, psanats, ts, status, result \
+                = self.filter_result(event_raw, "integrate_start")
+            ev.integrate_start = self.get_time(ts)
+
+            events.append(ev)
+
+        return events
