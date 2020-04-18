@@ -167,3 +167,7 @@ class Event(object):
         str_repr += f"\n  +-> is locked = {self.locked}"
 
         return str_repr
+
+
+    def __lt__(self, other):
+        return self.start < other.start
