@@ -194,6 +194,10 @@ class EventStream(object):
         self._events.append(event)
 
 
+    def sort(self):
+        self._events.sort(key=lambda x: x.start)
+
+
     @property
     def rank(self):
         return self._rank
