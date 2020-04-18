@@ -183,7 +183,6 @@ class EventStream(object):
 
 
     def add(self, event):
-
         # track first element
         if self.first == None:
             self._first = event

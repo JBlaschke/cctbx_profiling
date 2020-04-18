@@ -12,14 +12,16 @@ from .gears import reverse_timestamp
 class EventParser(object):
 
     @staticmethod
-    def scan_event(lines, offset):
+    def scan_event(lines):
 
         event_ok    = True
         end_index   = 0
         event_lines = list()
 
-        for i, line in enumerate(lines, offset):
+        if len(lines) == 0:
+            event_ok = False
 
+        for i, line in enumerate(lines):
             try:
                 hostname, psanats, ts, status, result = line.strip().split(',')
             except ValueError:
@@ -29,7 +31,7 @@ class EventParser(object):
 
             event_lines.append((hostname, psanats, ts, status, result))
 
-            if status in ['stop', 'done', 'fail']:
+            if status in ["stop", "done", "fail"]:
                 end_index = i
                 break
 
@@ -109,7 +111,7 @@ class EventParser(object):
 
         while True:
             end_index, event_ok, event_lines \
-                = self.scan_event(self.lines[offset:], offset)
+                = self.scan_event(self.lines[offset:])
 
             if event_ok:
                 events_raw.append(event_lines)
@@ -121,7 +123,6 @@ class EventParser(object):
         events = EventStream(self.rank)
 
         for event_raw in events_raw:
-
             hostname, psanats, ts_start, status, result \
                 = self.filter_result(event_raw, "start")
 
@@ -158,9 +159,7 @@ class EventParser(object):
 
             events.add(ev)
 
-
         # TODO: what will we do with "broken" events?
-
 
         return events
 
@@ -169,11 +168,19 @@ class EventParser(object):
 class DirectoryStream(object):
 
     def __init__ (self, root):
-        self._root = root
+        self._root          = root
         self._event_streams = list()
+        self._first         = None
 
 
     def add(self, event_stream):
+        # track first element
+        if self.first == None:
+            self._first = event_stream.first
+        else:
+            if event_stream.first < self.first:
+                self._first = event_stream.first
+
         self._event_streams.append(event_stream)
 
 
@@ -187,6 +194,11 @@ class DirectoryStream(object):
         return self._event_streams
 
 
+    @property
+    def first(self):
+        return self._first
+
+
 
 class DebugParser(object):
 
@@ -196,8 +208,11 @@ class DebugParser(object):
 
 
     def parse(self):
+        directory_stream = DirectoryStream(self.root)
 
-        par = parser.EventParser(self.root, "debug_2.txt")
+        for file_name in os.listdir(self.root):
+            par = EventParser(self.root, file_name)
+            directory_stream.add(par.parse())
 
 
     @property
