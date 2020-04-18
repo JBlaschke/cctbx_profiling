@@ -9,6 +9,36 @@ from .gears import reverse_timestamp
 
 
 
+class EventStream(object):
+
+    def __init__(self, rank):
+        self._rank   = rank
+        self._events = list()
+
+
+    def add(self, event):
+        self._events.append(event)
+
+
+    @property
+    def rank(self):
+        return self._rank
+
+
+    @property
+    def events(self):
+        return self._events
+
+
+    def __repr__(self):
+        str_repr = f"Events on {self.rank}: ["
+        for event in self.events:
+            str_repr += f"\n{event}"
+        str_repr += "]"
+
+        return str_repr
+
+
 class EventParser(object):
 
     @staticmethod
@@ -118,7 +148,7 @@ class EventParser(object):
             if offset > len(self.lines):
                 break
 
-        events = list()
+        events = EventStream(self.rank)
 
         for event_raw in events_raw:
 
@@ -156,10 +186,55 @@ class EventParser(object):
             ev.ok = True
             ev.lock()
 
-            events.append(ev)
+            events.add(ev)
 
 
         # TODO: what will we do with "broken" events?
 
 
         return events
+
+
+
+class DirectoryStream(object):
+
+    def __init__ (self, root):
+        self._root = root
+        self._event_streams = list()
+
+
+    def add(self, event_stream):
+        self._event_streams.append(event_stream)
+
+
+    @property
+    def root(self):
+        return self._root
+
+
+    @property
+    def event_streams(self):
+        return self._event_streams
+
+
+
+class DebugParser(object):
+
+    def __init__(self, root):
+        self._root = root
+        self._directory_stream = DirectoryStream(root)
+
+
+    def parse(self):
+
+        par = parser.EventParser(self.root, "debug_2.txt")
+
+
+    @property
+    def root(self):
+        return self._root
+
+
+    @root.setter
+    def root(self, value):
+        self._root = value
