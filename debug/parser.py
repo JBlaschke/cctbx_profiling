@@ -9,8 +9,6 @@ from .gears import reverse_timestamp
 
 
 
-
-
 class EventParser(object):
 
     @staticmethod

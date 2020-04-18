@@ -183,6 +183,14 @@ class EventStream(object):
 
 
     def add(self, event):
+
+        # track first element
+        if self.first == None:
+            self._first = event
+        else:
+            if event < self.first:
+                self._first = event
+
         self._events.append(event)
 
 
@@ -196,11 +204,19 @@ class EventStream(object):
         return self._events
 
 
+    @property
+    def first(self):
+        return self._first
+
+
     def __repr__(self):
         str_repr = f"Events on {self.rank}: ["
         for event in self.events:
             str_repr += f"\n{event}"
         str_repr += "]"
+
+        if hasattr(self, "first"):
+            str_repr += f"\n|=> First Event:\n{self.first}"
 
         return str_repr
 
