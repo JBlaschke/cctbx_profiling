@@ -171,3 +171,40 @@ class Event(object):
 
     def __lt__(self, other):
         return self.start < other.start
+
+
+
+class EventStream(object):
+
+    def __init__(self, rank):
+        self._rank   = rank
+        self._events = list()
+        self._first  = None;
+
+
+    def add(self, event):
+        self._events.append(event)
+
+
+    @property
+    def rank(self):
+        return self._rank
+
+
+    @property
+    def events(self):
+        return self._events
+
+
+    def __repr__(self):
+        str_repr = f"Events on {self.rank}: ["
+        for event in self.events:
+            str_repr += f"\n{event}"
+        str_repr += "]"
+
+        return str_repr
+
+
+    def __getitem__(self, key):
+        return self._events[key]
+
