@@ -14,6 +14,7 @@ class EventStream(object):
     def __init__(self, rank):
         self._rank   = rank
         self._events = list()
+        self._first  = None;
 
 
     def add(self, event):
@@ -37,6 +38,11 @@ class EventStream(object):
         str_repr += "]"
 
         return str_repr
+
+
+    def __getitem__(self, key):
+        return self._events[key]
+
 
 
 class EventParser(object):
