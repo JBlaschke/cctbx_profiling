@@ -6,6 +6,7 @@ import os
 
 from .event import Event, EventStream
 from .gears import reverse_timestamp
+from .directory import DirectoryStream
 
 
 
@@ -66,14 +67,15 @@ class EventParser(object):
 
     def __init__(self, root, file_name):
 
-        self._valid = False
+        self._valid     = False
+        self._file_name = file_name
+        self._root      = root
 
         if os.path.splitext(file_name)[1] != '.txt': return
         if 'debug' not in file_name: return
 
-        self._file_name = file_name
-        self._root      = root
-        self._rank      = int(file_name.split('_')[1].split('.')[0])
+        self._valid = True
+        self._rank  = int(file_name.split('_')[1].split('.')[0])
 
         with open(os.path.join(self.root, self.file_name)) as f:
             self._lines = f.readlines()
@@ -102,6 +104,13 @@ class EventParser(object):
     @property
     def lines(self):
         return self._lines
+
+
+    def __repr__(self):
+        if self.valid:
+            return f"EventParser({self.root}, {self.file_name} | {self.rank}, {self.valid})"
+        else:
+            return f"EventParser({self.root}, {self.file_name} | {self.valid})"
 
 
     def parse(self):
@@ -165,41 +174,6 @@ class EventParser(object):
 
 
 
-class DirectoryStream(object):
-
-    def __init__ (self, root):
-        self._root          = root
-        self._event_streams = list()
-        self._first         = None
-
-
-    def add(self, event_stream):
-        # track first element
-        if self.first == None:
-            self._first = event_stream.first
-        else:
-            if event_stream.first < self.first:
-                self._first = event_stream.first
-
-        self._event_streams.append(event_stream)
-
-
-    @property
-    def root(self):
-        return self._root
-
-
-    @property
-    def event_streams(self):
-        return self._event_streams
-
-
-    @property
-    def first(self):
-        return self._first
-
-
-
 class DebugParser(object):
 
     def __init__(self, root):
@@ -212,7 +186,11 @@ class DebugParser(object):
 
         for file_name in os.listdir(self.root):
             par = EventParser(self.root, file_name)
-            directory_stream.add(par.parse())
+
+            if par.valid:
+                directory_stream.add(par.parse())
+            else:
+                print(f"Skipping: {par}")
 
 
     @property
