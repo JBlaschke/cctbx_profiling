@@ -198,7 +198,7 @@ class Event(object):
         """ This is true if self started before other """
         return self.start < other.start
 
-
+    @property
     def duration(self):
         """ This returns the duration of the Event """
         return self.finish - self.start
@@ -220,7 +220,7 @@ class EventStream(object):
         self._events = list()
 
         # gets set once the first event has been added
-        self._first  = None;
+        self._first = None;
 
         # gets set to True after the first run or `compute_stats`
         self._has_stats = False;
@@ -283,7 +283,7 @@ class EventStream(object):
 
         self._duration = list()
         for ev in self.events:
-            self._duration.append(ev.duration())
+            self._duration.append(ev.duration)
 
         self._has_stats = True
 
