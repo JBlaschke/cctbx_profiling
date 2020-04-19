@@ -36,3 +36,13 @@ class DirectoryStream(object):
     def first(self):
         return self._first
 
+
+    def __repr__(self):
+        n_events = len(self.event_streams)
+
+        str_repr =  f"DirectoryStream({self.root}):"
+        str_repr += f"\n +-> containing {n_events} EventStreams"
+        str_repr += f"\n |=> first Event:"
+        str_repr += f"{self.first}"
+
+        return str_repr

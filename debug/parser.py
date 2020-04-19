@@ -192,6 +192,8 @@ class DebugParser(object):
             else:
                 print(f"Skipping: {par}")
 
+        return directory_stream
+
 
     @property
     def root(self):

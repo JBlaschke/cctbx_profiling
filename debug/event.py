@@ -224,6 +224,10 @@ class EventStream(object):
         return str_repr
 
 
+    def __len__(self):
+        return len(self.events)
+
+
     def __getitem__(self, key):
         return self._events[key]
 
