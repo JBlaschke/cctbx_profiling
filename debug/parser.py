@@ -40,6 +40,16 @@ class EventParser(object):
 
 
     @staticmethod
+    def has_result(event_data, target):
+
+        for hostname, psanats, ts, status, result  in event_data:
+            if result in target:
+                return True
+
+        return False
+
+
+    @staticmethod
     def filter_result(event_data, target):
 
         for hostname, psanats, ts, status, result  in event_data:
@@ -47,6 +57,16 @@ class EventParser(object):
                 return hostname, psanats, ts, status, result
 
         return None
+
+
+    @staticmethod
+    def has_status(event_data, target):
+
+        for hostname, psanats, ts, status, result  in event_data:
+            if status in target:
+                return True
+
+        return False
 
 
     @staticmethod
@@ -133,7 +153,7 @@ class EventParser(object):
 
         for event_raw in events_raw:
             hostname, psanats, ts_start, status, result \
-                = self.filter_result(event_raw, "start")
+                = self.filter_result(event_raw, ["start"])
 
             start_time = self.get_time(ts_start)
 
@@ -147,21 +167,25 @@ class EventParser(object):
             ev.psanats  = psanats
             ev.status   = status
 
-            hostname, psanats, ts, status, result \
-                = self.filter_result(event_raw, "spotfind_start")
-            ev.spotfind_start = self.get_time(ts)
+            if self.has_result(event_raw, ["spotfind_start"]):
+                hostname, psanats, ts, status, result \
+                    = self.filter_result(event_raw, ["spotfind_start"])
+                ev.spotfind_start = self.get_time(ts)
 
-            hostname, psanats, ts, status, result \
-                = self.filter_result(event_raw, "index_start")
-            ev.index_start = self.get_time(ts)
+            if self.has_result(event_raw, ["index_start"]):
+                hostname, psanats, ts, status, result \
+                    = self.filter_result(event_raw, ["index_start"])
+                ev.index_start = self.get_time(ts)
 
-            hostname, psanats, ts, status, result \
-                = self.filter_result(event_raw, "refine_start")
-            ev.refine_start = self.get_time(ts)
+            if self.has_result(event_raw, ["refine_start"]):
+                hostname, psanats, ts, status, result \
+                    = self.filter_result(event_raw, ["refine_start"])
+                ev.refine_start = self.get_time(ts)
 
-            hostname, psanats, ts, status, result \
-                = self.filter_result(event_raw, "integrate_start")
-            ev.integrate_start = self.get_time(ts)
+            if self.has_result(event_raw, ["integrate_start"]):
+                hostname, psanats, ts, status, result \
+                    = self.filter_result(event_raw, ["integrate_start"])
+                ev.integrate_start = self.get_time(ts)
 
             ev.ok = True
             ev.lock()
