@@ -12,9 +12,9 @@ def reverse_timestamp(timestamp):
     timestamp, return the Unix time as a tuple of seconds and
     milliseconds.
 
-    @param timestamp Human-readable ISO 8601 timestamp in string
-                   representation
-    @return          Tuple of the Unix time in seconds and milliseconds
+    @param   timestamp Human-readable ISO 8601 timestamp in string
+             representation
+    @return  Tuple of the Unix time in seconds and milliseconds
     """
 
     tokens = timestamp.split('.')

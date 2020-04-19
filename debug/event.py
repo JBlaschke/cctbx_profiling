@@ -170,16 +170,31 @@ class Event(object):
 
 
     def __lt__(self, other):
+        """ This is true if self started before other """
         return self.start < other.start
+
+
+    def duration(self):
+        """ This returns the duration of the Event """
+        return self.finish - self.start
+
+
+    def __sub__(self, other):
+        """ This returns the time between two events """
+
+        # using this order to make it look like "minus" when doing:
+        #   ev[1] - ev[0]
+        return self.start - other.finish
 
 
 
 class EventStream(object):
 
     def __init__(self, rank):
-        self._rank   = rank
-        self._events = list()
-        self._first  = None;
+        self._rank     = rank
+        self._events   = list()
+        self._first    = None;
+        self._has_diff = False;
 
 
     def add(self, event):
@@ -210,6 +225,26 @@ class EventStream(object):
     @property
     def first(self):
         return self._first
+
+
+    @property
+    def has_diff(self):
+        return self._has_diff
+
+
+    @property
+    def diff(self):
+        return self._diff
+
+
+    def compute_diff(self):
+        self._diff = list()
+
+        prev = self.events[0]
+        for ev in self.events[1:]:
+            delta = ev - prev
+            prev  = ev
+            self._diff.append(delta)
 
 
     def __repr__(self):
