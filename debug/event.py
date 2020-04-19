@@ -15,6 +15,13 @@ class Event(object):
         self._finish = finish_time
         self._locked = False
 
+        self._inner_steps = [
+            "spotfind_start",
+            "index_start",
+            "refine_start",
+            "integrate_start"
+        ]
+
 
     def lock(self):
         self._locked = True
@@ -138,22 +145,21 @@ class Event(object):
         else:
             raise WriteToLockedEventError()
 
+    #@property
+    #def event_order(self):
+
+
 
     def __repr__(self):
 
         str_repr =  f"Event({self.start}, {self.finish})"
 
-        if hasattr(self, "spotfind_start"):
-            str_repr += f"\n  +-> spotfind_start = {self.spotfind_start}"
-
-        if hasattr(self, "index_start"):
-            str_repr += f"\n  +-> index_start = {self.index_start}"
-
-        if hasattr(self, "refine_start"):
-            str_repr += f"\n  +-> refine_start = {self.refine_start}"
-
-        if hasattr(self, "integrate_start"):
-            str_repr += f"\n  +-> integrate_start = {self.integrate_start}"
+        for step in self._inner_steps:
+            # Bit of a hack to build an f-string
+            step_string = lambda field: "\n  +-> {step} = {self."+field+"}"
+            if hasattr(self, f"{step}"):
+                step_str = step_string(step)
+                str_repr += eval(f'f"""{step_str}"""')  # ergch
 
         if hasattr(self, "hostname"):
             str_repr += f"\n  +-> hostname = {self.hostname}"
@@ -281,4 +287,3 @@ class EventStream(object):
 
     def __getitem__(self, key):
         return self._events[key]
-
