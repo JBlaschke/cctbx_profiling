@@ -246,6 +246,8 @@ class EventStream(object):
             prev  = ev
             self._diff.append(delta)
 
+        self._has_diff = True
+
 
     def __repr__(self):
         str_repr = f"Events on {self.rank}: ["
