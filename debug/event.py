@@ -191,10 +191,14 @@ class Event(object):
 class EventStream(object):
 
     def __init__(self, rank):
-        self._rank     = rank
-        self._events   = list()
-        self._first    = None;
-        self._has_diff = False;
+        self._rank   = rank
+        self._events = list()
+
+        # gets set once the first event has been added
+        self._first  = None;
+
+        # gets set to True after the first run or `compute_stats`
+        self._has_stats = False;
 
 
     def add(self, event):
@@ -228,8 +232,8 @@ class EventStream(object):
 
 
     @property
-    def has_diff(self):
-        return self._has_diff
+    def has_stats(self):
+        return self._has_stats
 
 
     @property
@@ -237,7 +241,12 @@ class EventStream(object):
         return self._diff
 
 
-    def compute_diff(self):
+    @property
+    def duration(self):
+        return self._duration
+
+
+    def compute_stats(self):
         self._diff = list()
 
         prev = self.events[0]
@@ -246,7 +255,12 @@ class EventStream(object):
             prev  = ev
             self._diff.append(delta)
 
-        self._has_diff = True
+
+        self._duration = list()
+        for ev in self.events:
+            self._duration.append(ev.duration())
+
+        self._has_stats = True
 
 
     def __repr__(self):
