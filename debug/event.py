@@ -145,9 +145,28 @@ class Event(object):
         else:
             raise WriteToLockedEventError()
 
-    #@property
-    #def event_order(self):
+    @property
+    def event_order(self):
 
+        # get list of steps that actually are in this event
+        steps = list()
+        for step in self._inner_steps:
+            if hasattr(self, step):
+                steps.append(step)
+
+        # sort steps
+        steps.sort(key = lambda x:getattr(self, x))
+
+        return steps
+
+
+    @property
+    def event_offsets(self):
+        times = list()
+        for step in self.event_order:
+            times.append(getattr(self, step) - self.start)
+
+        return times
 
 
     def __repr__(self):
@@ -157,7 +176,7 @@ class Event(object):
         for step in self._inner_steps:
             # Bit of a hack to build an f-string
             step_string = lambda field: "\n  +-> {step} = {self."+field+"}"
-            if hasattr(self, f"{step}"):
+            if hasattr(self, step):
                 step_str = step_string(step)
                 str_repr += eval(f'f"""{step_str}"""')  # ergch
 
