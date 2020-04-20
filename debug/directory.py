@@ -67,29 +67,45 @@ class DirectoryStream(object):
         return self._failed_duration
 
 
-    def compute_stats(self):
+    @property
+    def good_total(self):
+        return self._good_total
 
-        isgood = lambda x: x.status == "done"
+
+    @property
+    def fail_total(self):
+        return self._fail_total
+
+
+    def compute_stats(self):
 
         self._good_diff       = list()
         self._good_duration   = list()
         self._failed_diff     = list()
         self._failed_duration = list()
+        self._good_total      = 0
+        self._fail_total      = 0
 
         for es in self.event_streams:
+            # make sure events are sorted
+            es.sort()
+
             es.compute_stats()
 
             for i in range(len(es) - 1):
-                if isgood(es[i]) and isgood(es[i + 1]):
+                if es[i].ok and es[i + 1].ok:
                     self._good_diff.append(es.diff[i])
                 else:
                     self._failed_diff.append(es.diff[i])
 
             for ev in es:
-                if isgood(ev):
+                if ev.ok:
                     self._good_duration.append(ev.duration)
                 else:
                     self._failed_duration.append(ev.duration)
+
+            self._good_total += es.good_total
+            self._fail_total += es.fail_total
 
         self._has_stats = True
 

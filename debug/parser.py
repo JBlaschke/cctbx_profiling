@@ -15,19 +15,19 @@ class EventParser(object):
     @staticmethod
     def scan_event(lines):
 
-        event_ok    = True
+        parse_ok    = True
         end_index   = 0
         event_lines = list()
 
         if len(lines) == 0:
-            event_ok = False
+            parse_ok = False
 
         for i, line in enumerate(lines):
             try:
                 hostname, psanats, ts, status, result = line.strip().split(',')
             except ValueError:
                 # I/O error mangled the file => de-validate the entire entry
-                event_ok = False
+                parse_ok = False
                 continue
 
             event_lines.append((hostname, psanats, ts, status, result))
@@ -36,7 +36,7 @@ class EventParser(object):
                 end_index = i
                 break
 
-        return end_index, event_ok, event_lines
+        return end_index, parse_ok, event_lines
 
 
     @staticmethod
@@ -139,11 +139,13 @@ class EventParser(object):
         events_raw = list()
 
         while True:
-            end_index, event_ok, event_lines \
+            end_index, parse_ok, event_lines \
                 = self.scan_event(self.lines[offset:])
 
-            if event_ok:
+            if parse_ok:
                 events_raw.append(event_lines)
+
+            # TODO: collect stats on events that could not be parsed
 
             offset += end_index + 1  # +1 => point the offest at the _next_ index
             if offset > len(self.lines):
@@ -187,7 +189,6 @@ class EventParser(object):
                     = self.filter_result(event_raw, ["integrate_start"])
                 ev.integrate_start = self.get_time(ts)
 
-            ev.ok = True
             ev.lock()
 
             events.add(ev)

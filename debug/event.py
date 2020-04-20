@@ -22,6 +22,8 @@ class Event(object):
             "integrate_start"
         ]
 
+        self._isgood = lambda x: x.status == "done"
+
 
     def lock(self):
         self._locked = True
@@ -44,15 +46,18 @@ class Event(object):
 
     @property
     def ok(self):
-        return self._ok
+        return self._isgood(self)
 
 
-    @ok.setter
-    def ok(self, value):
-        if not self._locked:
-            self._ok = value
-        else:
-            raise WriteToLockedEventError()
+    @property
+    def isgood(self):
+        """ Lambda function used to test if an event is good """
+        return self._isgood
+
+
+    @isgood.setter
+    def isgood(self, value):
+        self._isgood = value
 
 
     @property
@@ -144,6 +149,7 @@ class Event(object):
             self._status = value
         else:
             raise WriteToLockedEventError()
+
 
     @property
     def event_order(self):
@@ -271,8 +277,23 @@ class EventStream(object):
         return self._duration
 
 
+    @property
+    def good_total(self):
+        return self._good_total
+
+
+    @property
+    def fail_total(self):
+        return self._fail_total
+
+
     def compute_stats(self):
+        # make sure that events are sorted
+        self.sort()
+
         self._diff = list()
+        self._good_total = 0
+        self._fail_total = 0
 
         prev = self.events[0]
         for ev in self.events[1:]:
@@ -284,6 +305,10 @@ class EventStream(object):
         self._duration = list()
         for ev in self.events:
             self._duration.append(ev.duration)
+            if ev.ok:
+                self._good_total += 1
+            else:
+                self._fail_total += 1
 
         self._has_stats = True
 
