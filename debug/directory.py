@@ -69,7 +69,7 @@ class DirectoryStream(object):
 
     def compute_stats(self):
 
-        isgood   = lambda x: x.status == "done"
+        isgood = lambda x: x.status == "done"
 
         self._good_diff       = list()
         self._good_duration   = list()
