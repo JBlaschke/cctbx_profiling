@@ -103,3 +103,6 @@ class DirectoryStream(object):
         str_repr += f"{self.first}"
 
         return str_repr
+
+    def __getitem__(self, key):
+        return self._event_streams[key]
