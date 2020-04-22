@@ -34,13 +34,15 @@ class DebugPlot(object):
                 ((eq[0], rank), (eq[1], rank)),
                 ((eq[1], rank), (eq[2], rank)),
                 ((eq[2], rank), (eq[3], rank)),
-                ((eq[3], rank), (eq[4], rank))
+                ((eq[3], rank), (eq[4], rank)),
+                ((eq[4], rank), (eq[5], rank))
             ]
             _colors += [
-                (1, 0, 0, 1),
-                (0, 1, 0, 1),
-                (0, 0, 1, 1),
-                (0, 0, 0, 1)
+                (1,   0,   0,   1),
+                (0,   1,   0,   1),
+                (0,   0,   1,   1),
+                (0,   0.5, 0.5, 1),
+                (0,   0,   0,   1)
             ]
 
         return mc.LineCollection(_lines, colors=_colors,

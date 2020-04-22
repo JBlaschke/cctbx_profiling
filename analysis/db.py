@@ -17,6 +17,7 @@ class DebugDB(object):
     def directory_stream(self, value):
         self._ds = value
 
+        self._ds.compute_stats()
         reference = self._ds.first.start
 
         # build internal database
@@ -34,6 +35,7 @@ class DebugDB(object):
                     eq = [ev.start - reference]
                     for offset in ev.event_offsets:
                         eq.append(ev.start - reference + offset)
+                    eq.append(ev.finish - reference)
                     self._good_eqs.append(eq)
                 else:
                     self._fail_timers.append(ev.finish - reference)
@@ -41,6 +43,7 @@ class DebugDB(object):
                     eq = [ev.start - reference]
                     for offset in ev.event_offsets:
                         eq.append(ev.start - reference + offset)
+                    eq.append(ev.finish - reference)
                     self._fail_eqs.append(eq)
 
 

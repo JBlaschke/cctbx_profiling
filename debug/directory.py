@@ -87,22 +87,24 @@ class DirectoryStream(object):
         self._fail_total      = 0
 
         for es in self.event_streams:
-            # make sure events are sorted
-            es.sort()
-
+            # compute the event-stream level statistics (this will also sort
+            # the event stream):
             es.compute_stats()
 
-            for i in range(len(es) - 1):
-                if es[i].ok and es[i + 1].ok:
-                    self._good_diff.append(es.diff[i])
-                else:
-                    self._failed_diff.append(es.diff[i])
-
+            # collect statistics
             for ev in es:
                 if ev.ok:
                     self._good_duration.append(ev.duration)
                 else:
                     self._failed_duration.append(ev.duration)
+
+            # collect diffs (gaps between events) NOTE that this only works if
+            # the even stream has been sorted:
+            for i in range(len(es) - 1):
+                if es[i].ok and es[i + 1].ok:
+                    self._good_diff.append(es.diff[i])
+                else:
+                    self._failed_diff.append(es.diff[i])
 
             self._good_total += es.good_total
             self._fail_total += es.fail_total

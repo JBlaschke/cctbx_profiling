@@ -291,24 +291,26 @@ class EventStream(object):
         # make sure that events are sorted
         self.sort()
 
-        self._diff = list()
+        self._diff     = list()
+        self._duration = list()
         self._good_total = 0
         self._fail_total = 0
 
-        prev = self.events[0]
-        for ev in self.events[1:]:
-            delta = ev - prev
-            prev  = ev
-            self._diff.append(delta)
-
-
-        self._duration = list()
+        # compute statistics
         for ev in self.events:
             self._duration.append(ev.duration)
             if ev.ok:
                 self._good_total += 1
             else:
                 self._fail_total += 1
+
+        # compute diffs (gaps between events) NOTE that this only works if the
+        # even stream has been sorted:
+        prev = self.events[0]
+        for ev in self.events[1:]:
+            delta = ev - prev
+            prev  = ev
+            self._diff.append(delta)
 
         self._has_stats = True
 
