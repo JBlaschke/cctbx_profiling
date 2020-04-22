@@ -4,4 +4,3 @@
 from .event     import Event, EventStream
 from .directory import DirectoryStream
 from .parser    import EventParser, DebugParser
-
