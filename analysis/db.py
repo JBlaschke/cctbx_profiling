@@ -75,4 +75,3 @@ class DebugDB(object):
     @property
     def fail_eqs(self):
         return self._fail_eqs
-
