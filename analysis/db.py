@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 
 
+from .eq import EventQueue
+
+
+
 class DebugDB(object):
 
     def __init__(self, ds):
@@ -75,3 +79,72 @@ class DebugDB(object):
     @property
     def fail_eqs(self):
         return self._fail_eqs
+
+
+
+class EventQueueDB(DebugDB):
+
+    def __init__(self, ds):
+        super().__init__(ds)
+
+        self.__good_eqs       = list()
+        self.__good_starts    = list()
+        self.__good_finishes  = list()
+        for eq in super().good_eqs:
+            self.__good_eqs.append(EventQueue(eq, True))
+            self.__good_starts.append(eq[0])
+            self.__good_finishes.append(eq[-1])
+
+        self.__fail_eqs       = list()
+        self.__fail_starts    = list()
+        self.__fail_finishes  = list()
+        for eq in super().fail_eqs:
+            self.__fail_eqs.append(EventQueue(eq, False))
+            self.__fail_starts.append(eq[0])
+            self.__fail_finishes.append(eq[-1])
+
+        self._end = -1  # TODO: use a max value instead
+
+
+    @property
+    def end(self):
+        return self._end
+
+
+    @end.setter
+    def end(self, value):
+        self._end = value
+        for eq in self.__good_eqs:
+            eq.end = value
+        for eq in self.__fail_eqs:
+            eq.end = alue
+
+
+    @property
+    def good_starts(self):
+        return self.__good_starts
+
+
+    @property
+    def good_finishes(self):
+        return self.__good_starts
+
+
+    @property
+    def fail_starts(self):
+        return self.__fail_starts
+
+
+    @property
+    def fail_finishes(self):
+        return self.__fail_starts
+
+
+    @property
+    def good_eqs(self):
+        return self.__good_eqs
+
+
+    @property
+    def fail_eqs(self):
+        return self.__fail_eqsv
