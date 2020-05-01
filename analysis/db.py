@@ -117,7 +117,7 @@ class EventQueueDB(DebugDB):
         for eq in self.__good_eqs:
             eq.end = value
         for eq in self.__fail_eqs:
-            eq.end = alue
+            eq.end = value
 
 
     @property
