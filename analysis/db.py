@@ -147,4 +147,4 @@ class EventQueueDB(DebugDB):
 
     @property
     def fail_eqs(self):
-        return self.__fail_eqsv
+        return self.__fail_eqs
