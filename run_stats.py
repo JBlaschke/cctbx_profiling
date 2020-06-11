@@ -9,17 +9,17 @@ data_path = sys.argv[1]
 
 
 
-def get_stats(data, n_data):
+def get_stats(data):
     min_data = -1
     max_data = -1
     avg_data = -1
     std_data = -1
 
-    if n_data > 0:
+    if len(data) > 0:
         min_data = min(data)
         max_data = max(data)
         avg_data = stat.mean(data)
-    if n_data > 1:
+    if len(data) > 1:
         std_data = stat.stdev(data)
 
     return min_data, max_data, avg_data, std_data
@@ -36,16 +36,16 @@ ds.compute_stats()
 n_good = ds.good_total
 
 min_good_diff, max_good_diff, avg_good_diff, std_good_diff =\
-    get_stats(ds.good_diff, n_good)
+    get_stats(ds.good_diff)
 min_good_len, max_good_len, avg_good_len, std_good_len =\
-    get_stats(ds.good_duration, n_good)
+    get_stats(ds.good_duration)
 
 n_fail = ds.fail_total
 
 min_fail_diff, max_fail_diff, avg_fail_diff, std_fail_diff =\
-    get_stats(ds.failed_diff, n_fail)
+    get_stats(ds.failed_diff)
 min_fail_len, max_fail_len, avg_fail_len, std_fail_len =\
-    get_stats(ds.failed_duration, n_fail)
+    get_stats(ds.failed_duration)
 
 
 # output results for user
