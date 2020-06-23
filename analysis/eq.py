@@ -17,18 +17,31 @@ class EventQueue(object):
         self._good = good
         # self._good = not len(eq) == 6
         # initialize based on EQ from DebugDB
-        self._spin_up  = (eq[0], eq[1])
-        self._spotfind = (eq[1], eq[2])
         if self.good:
+            self._spin_up   = (eq[0], eq[1])
+            self._spotfind  = (eq[1], eq[2])
             self._index     = (eq[2], eq[3])
             self._refine    = (eq[3], eq[4])
             self._integrate = (eq[4], eq[5])
             self._post      = self._integrate
             self._end       = eq[5]
         else:
-            self._index = (eq[1], eq[2])
-            self._post  = self._index
-            self._end   = eq[2]
+            # Failed events can have any number of steps
+            end_index = 1
+            self._spin_up = (eq[0], eq[1])
+            if len(eq) > 2:
+                self._spotfind = (eq[1], eq[2])
+                self._post     = self._spotfind
+            if len(eq) > 3:
+                self._index = (eq[2], eq[3])
+                self._post  = self._index
+            if len(eq) > 4:
+                self._refine = (eq[3], eq[4])
+                self._post   = self._refine
+            if len(eq) > 5:
+                self._integrate = (eq[4], eq[5])
+                self._post      = self._integrate
+            self._end = eq[end_index]
 
 
     @property

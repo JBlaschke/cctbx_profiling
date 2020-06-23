@@ -26,10 +26,21 @@ class DebugPlot(object):
 
     @property
     def lines(self):
+
+        # currently this only works with up to 5 colors
+        color_map = [
+            (1,   0,   0,   1),
+            (0,   1,   0,   1),
+            (0,   0,   1,   1),
+            (0,   0.5, 0.5, 1),
+            (0,   0,   0,   1)
+        ]
+
         _lines  = list()
         _colors = list()
+
         for rank, eq in zip(self.db.good_ranks, self.db.good_eqs):
-            # assumes that self.good_eqs[:] each have a lenght of 5
+            # assumes that db.good_eqs[:] each have a lenght of 6
             _lines += [
                 ((eq[0], rank), (eq[1], rank)),
                 ((eq[1], rank), (eq[2], rank)),
@@ -37,13 +48,15 @@ class DebugPlot(object):
                 ((eq[3], rank), (eq[4], rank)),
                 ((eq[4], rank), (eq[5], rank))
             ]
-            _colors += [
-                (1,   0,   0,   1),
-                (0,   1,   0,   1),
-                (0,   0,   1,   1),
-                (0,   0.5, 0.5, 1),
-                (0,   0,   0,   1)
-            ]
+            _colors += color_map
+
+        for rank, eq in zip(self.db.fail_ranks, self.db.fail_eqs):
+            # cannot assume that db.fail_eqs[:] has a fixed lenght
+            for i in range(len(eq) - 1):
+                _lines.append(
+                    ((eq[i], rank), (eq[i+1], rank))
+                )
+                _colors.append(color_map[i])
 
         return mc.LineCollection(_lines, colors=_colors,
                                  linewidths=self._line_width)
