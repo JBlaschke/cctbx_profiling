@@ -201,9 +201,10 @@ class EventParser(object):
 
 class DebugParser(object):
 
-    def __init__(self, root):
+    def __init__(self, root, verbose=False):
         self._root = root
         self._directory_stream = DirectoryStream(root)
+        self.verbose = verbose
 
 
     def parse(self):
@@ -215,7 +216,8 @@ class DebugParser(object):
             if par.valid:
                 directory_stream.add(par.parse())
             else:
-                print(f"Skipping: {par}")
+                if self.verbose:
+                    print(f"Skipping: {par}")
 
         return directory_stream
 
@@ -228,3 +230,4 @@ class DebugParser(object):
     @root.setter
     def root(self, value):
         self._root = value
+        self._directory_stream = DirectoryStream(self.root)
