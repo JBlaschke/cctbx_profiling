@@ -200,6 +200,9 @@ class Event(object):
         return str_repr
 
 
+    # don't definte __gt__ (based on end) because events could be overlapping
+    # => both lt and gt. By leaving __gt__ undefined, it will make sure that
+    # the user is aware of this ambiguity.
     def __lt__(self, other):
         """ This is true if self started before other """
         return self.start < other.start
@@ -226,19 +229,24 @@ class EventStream(object):
         self._events = list()
 
         # gets set once the first event has been added
-        self._first = None;
+        self._first = None
+        self._last  = None
 
         # gets set to True after the first run or `compute_stats`
-        self._has_stats = False;
+        self._has_stats = False
 
 
     def add(self, event):
         # track first element
         if self.first == None:
             self._first = event
+            self._last  = event
         else:
             if event < self.first:
                 self._first = event
+            elif self.last < event:
+                self._last = event
+
 
         self._events.append(event)
 
@@ -260,6 +268,11 @@ class EventStream(object):
     @property
     def first(self):
         return self._first
+
+
+    @property
+    def last(self):
+        return self._last
 
 
     @property

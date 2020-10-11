@@ -11,9 +11,10 @@ class DirectoryStream(object):
 
         # gets set once the first event has been added
         self._first = None
+        self._last  = None
 
         # gets set to True after the first run or `compute_stats`
-        self._has_stats = False;
+        self._has_stats = False
 
 
 
@@ -21,9 +22,13 @@ class DirectoryStream(object):
         # track first element
         if self.first == None:
             self._first = event_stream.first
+            self._last  = event_stream.last
         else:
             if event_stream.first < self.first:
                 self._first = event_stream.first
+            elif self.last < event_stream.last:
+                self._last = event_stream.last
+            
 
         self._event_streams.append(event_stream)
 
@@ -41,6 +46,12 @@ class DirectoryStream(object):
     @property
     def first(self):
         return self._first
+
+
+    @property
+    def last(self):
+        return self._last
+
 
     @property
     def has_stats(self):
