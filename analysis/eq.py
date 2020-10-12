@@ -49,15 +49,19 @@ class EventQueue(object):
         if len(eq) > 2:
             self._spotfind = (eq[1], eq[2])
             self._post     = self._spotfind
+            end_index = 2
         if len(eq) > 3:
             self._index = (eq[2], eq[3])
             self._post  = self._index
+            end_index = 3
         if len(eq) > 4:
             self._refine = (eq[3], eq[4])
             self._post   = self._refine
+            end_index = 4
         if len(eq) > 5:
             self._integrate = (eq[4], eq[5])
             self._post      = self._integrate
+            end_index = 5
         self._end = eq[end_index]
 
 
