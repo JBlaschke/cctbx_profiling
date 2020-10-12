@@ -319,11 +319,12 @@ class EventStream(object):
 
         # compute diffs (gaps between events) NOTE that this only works if the
         # even stream has been sorted:
-        prev = self.events[0]
-        for ev in self.events[1:]:
-            delta = ev - prev
-            prev  = ev
-            self._diff.append(delta)
+        if len(self.events) > 0:
+            prev = self.events[0]
+            for ev in self.events[1:]:
+                delta = ev - prev
+                prev  = ev
+                self._diff.append(delta)
 
         self._has_stats = True
 

@@ -20,14 +20,15 @@ class DirectoryStream(object):
 
     def add(self, event_stream):
         # track first element
-        if self.first == None:
-            self._first = event_stream.first
-            self._last  = event_stream.last
-        else:
-            if event_stream.first < self.first:
+        if event_stream.first is not None:
+            if self.first == None:
                 self._first = event_stream.first
-            elif self.last < event_stream.last:
-                self._last = event_stream.last
+                self._last  = event_stream.last
+            else:
+                if event_stream.first < self.first:
+                    self._first = event_stream.first
+                elif self.last < event_stream.last:
+                    self._last = event_stream.last
             
 
         self._event_streams.append(event_stream)

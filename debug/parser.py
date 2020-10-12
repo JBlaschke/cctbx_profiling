@@ -154,13 +154,17 @@ class EventParser(object):
         events = EventStream(self.rank)
 
         for event_raw in events_raw:
-            hostname, psanats, ts_start, status, result \
-                = self.filter_result(event_raw, ["start"])
+            result = self.filter_result(event_raw, ["start"])
+            if result is None:
+                continue
+            hostname, psanats, ts_start, status, result = result
 
             start_time = self.get_time(ts_start)
 
-            hostname, psanats, ts_finish, status, result \
-                = self.filter_status(event_raw, ["stop", "done", "fail"])
+            status = self.filter_status(event_raw, ["stop", "done", "fail"])
+            if status is None:
+                continue
+            hostname, psanats, ts_finish, status, result = status
 
             finish_time = self.get_time(ts_finish)
 
