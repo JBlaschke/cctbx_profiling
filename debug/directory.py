@@ -35,6 +35,15 @@ class DirectoryStream(object):
 
 
     @property
+    def empty(self):
+        if self._first is None:
+            return True
+        if self._last is None:
+            return True
+        return False
+
+
+    @property
     def root(self):
         return self._root
 

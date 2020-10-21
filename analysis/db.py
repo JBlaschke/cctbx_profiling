@@ -22,7 +22,8 @@ class DebugDB(object):
         self._ds = value
 
         self._ds.compute_stats()
-        reference = self._ds.first.start
+        if not self._ds.empty:
+            reference = self._ds.first.start
 
         # build internal database
         self._good_timers = list()
