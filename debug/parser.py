@@ -23,9 +23,17 @@ class EventParser(object):
             parse_ok = False
 
         for i, line in enumerate(lines):
-            try:
-                hostname, psanats, ts, status, result = line.strip().split(',')
-            except ValueError:
+            # try:
+            #     hostname, psanats, ts, status, result = line.strip().split(',')
+            # except ValueError:
+            #     # I/O error mangled the file => de-validate the entire entry
+            #     parse_ok = False
+            #     continue
+
+            line_fields = line.strip().split(',')
+            if len(line_fields) == 5:
+                hostname, psanats, ts, status, result = line_fields
+            else:
                 # I/O error mangled the file => de-validate the entire entry
                 parse_ok = False
                 continue
@@ -140,7 +148,7 @@ class EventParser(object):
 
         while True:
             end_index, parse_ok, event_lines \
-                = self.scan_event(self.lines[offset:])
+                = EventParser.scan_event(self.lines[offset:])
 
             if parse_ok:
                 events_raw.append(event_lines)
@@ -154,44 +162,44 @@ class EventParser(object):
         events = EventStream(self.rank)
 
         for event_raw in events_raw:
-            result = self.filter_result(event_raw, ["start"])
+            result = EventParser.filter_result(event_raw, ["start"])
             if result is None:
                 continue
             hostname, psanats, ts_start, status, result = result
 
-            start_time = self.get_time(ts_start)
+            start_time = EventParser.get_time(ts_start)
 
             status = self.filter_status(event_raw, ["stop", "done", "fail"])
             if status is None:
                 continue
             hostname, psanats, ts_finish, status, result = status
 
-            finish_time = self.get_time(ts_finish)
+            finish_time = EventParser.get_time(ts_finish)
 
             ev = Event(start_time, finish_time)
             ev.hostname = hostname
             ev.psanats  = psanats
             ev.status   = status
 
-            if self.has_result(event_raw, ["spotfind_start"]):
+            if EventParser.has_result(event_raw, ["spotfind_start"]):
                 hostname, psanats, ts, status, result \
-                    = self.filter_result(event_raw, ["spotfind_start"])
-                ev.spotfind_start = self.get_time(ts)
+                    = EventParser.filter_result(event_raw, ["spotfind_start"])
+                ev.spotfind_start = EventParser.get_time(ts)
 
-            if self.has_result(event_raw, ["index_start"]):
+            if EventParser.has_result(event_raw, ["index_start"]):
                 hostname, psanats, ts, status, result \
-                    = self.filter_result(event_raw, ["index_start"])
-                ev.index_start = self.get_time(ts)
+                    = EventParser.filter_result(event_raw, ["index_start"])
+                ev.index_start = EventParser.get_time(ts)
 
-            if self.has_result(event_raw, ["refine_start"]):
+            if EventParser.has_result(event_raw, ["refine_start"]):
                 hostname, psanats, ts, status, result \
-                    = self.filter_result(event_raw, ["refine_start"])
-                ev.refine_start = self.get_time(ts)
+                    = EventParser.filter_result(event_raw, ["refine_start"])
+                ev.refine_start = EventParser.get_time(ts)
 
-            if self.has_result(event_raw, ["integrate_start"]):
+            if EventParser.has_result(event_raw, ["integrate_start"]):
                 hostname, psanats, ts, status, result \
-                    = self.filter_result(event_raw, ["integrate_start"])
-                ev.integrate_start = self.get_time(ts)
+                    = EventParser.filter_result(event_raw, ["integrate_start"])
+                ev.integrate_start = EventParser.get_time(ts)
 
             ev.lock()
 
