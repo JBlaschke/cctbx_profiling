@@ -40,7 +40,7 @@ class EventParser(object):
 
             event_lines.append((hostname, psanats, ts, status, result))
 
-            if status in ["stop", "done", "fail"]:
+            if status in ("stop", "done", "fail"):
                 end_index = i
                 break
 
@@ -162,14 +162,14 @@ class EventParser(object):
         events = EventStream(self.rank)
 
         for event_raw in events_raw:
-            result = EventParser.filter_result(event_raw, ["start"])
+            result = EventParser.filter_result(event_raw, ("start"))
             if result is None:
                 continue
             hostname, psanats, ts_start, status, result = result
 
             start_time = EventParser.get_time(ts_start)
 
-            status = self.filter_status(event_raw, ["stop", "done", "fail"])
+            status = self.filter_status(event_raw, ("stop", "done", "fail"))
             if status is None:
                 continue
             hostname, psanats, ts_finish, status, result = status
@@ -181,24 +181,24 @@ class EventParser(object):
             ev.psanats  = psanats
             ev.status   = status
 
-            if EventParser.has_result(event_raw, ["spotfind_start"]):
+            if EventParser.has_result(event_raw, ("spotfind_start")):
                 hostname, psanats, ts, status, result \
-                    = EventParser.filter_result(event_raw, ["spotfind_start"])
+                    = EventParser.filter_result(event_raw, ("spotfind_start"))
                 ev.spotfind_start = EventParser.get_time(ts)
 
-            if EventParser.has_result(event_raw, ["index_start"]):
+            if EventParser.has_result(event_raw, ("index_start")):
                 hostname, psanats, ts, status, result \
-                    = EventParser.filter_result(event_raw, ["index_start"])
+                    = EventParser.filter_result(event_raw, ("index_start"))
                 ev.index_start = EventParser.get_time(ts)
 
-            if EventParser.has_result(event_raw, ["refine_start"]):
+            if EventParser.has_result(event_raw, ("refine_start")):
                 hostname, psanats, ts, status, result \
-                    = EventParser.filter_result(event_raw, ["refine_start"])
+                    = EventParser.filter_result(event_raw, ("refine_start"))
                 ev.refine_start = EventParser.get_time(ts)
 
-            if EventParser.has_result(event_raw, ["integrate_start"]):
+            if EventParser.has_result(event_raw, ("integrate_start")):
                 hostname, psanats, ts, status, result \
-                    = EventParser.filter_result(event_raw, ["integrate_start"])
+                    = EventParser.filter_result(event_raw, ("integrate_start"))
                 ev.integrate_start = EventParser.get_time(ts)
 
             ev.lock()
