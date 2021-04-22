@@ -172,6 +172,7 @@ class EventParser(object):
             status = self.filter_status(event_raw, ("stop", "done", "fail"))
             if status is None:
                 continue
+
             hostname, psanats, ts_finish, status, result = status
 
             finish_time = EventParser.get_time(ts_finish)
