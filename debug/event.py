@@ -15,12 +15,12 @@ class Event(object):
         self._finish = finish_time
         self._locked = False
 
-        self._inner_steps = [
+        self._inner_steps = (
             "spotfind_start",
             "index_start",
             "refine_start",
             "integrate_start"
-        ]
+        )
 
         self._isgood = lambda x: x.status == "done"
 
@@ -51,7 +51,6 @@ class Event(object):
 
     @property
     def isgood(self):
-        """ Lambda function used to test if an event is good """
         return self._isgood
 
 
@@ -152,6 +151,19 @@ class Event(object):
 
 
     @property
+    def result(self):
+        return self._result
+
+
+    @result.setter
+    def result(self, value):
+        if not self._locked:
+            self._result = value
+        else:
+            raise WriteToLockedEventError()
+
+
+    @property
     def event_order(self):
 
         # get list of steps that actually are in this event
@@ -194,6 +206,9 @@ class Event(object):
 
         if hasattr(self, "status"):
             str_repr += f"\n  +-> status = {self.status}"
+
+        if hasattr(self, "result"):
+            str_repr += f"\n  +-> result = {self.result}"
 
         str_repr += f"\n  +-> is locked = {self.locked}"
 

@@ -23,13 +23,6 @@ class EventParser(object):
             parse_ok = False
 
         for i, line in enumerate(lines):
-            # try:
-            #     hostname, psanats, ts, status, result = line.strip().split(',')
-            # except ValueError:
-            #     # I/O error mangled the file => de-validate the entire entry
-            #     parse_ok = False
-            #     continue
-
             line_fields = line.strip().split(',')
             if len(line_fields) == 5:
                 hostname, psanats, ts, status, result = line_fields
@@ -47,45 +40,6 @@ class EventParser(object):
         return end_index, parse_ok, event_lines
 
 
-    @staticmethod
-    def has_result(event_data, target):
-
-        for hostname, psanats, ts, status, result  in event_data:
-            if result in target:
-                return True
-
-        return False
-
-
-    @staticmethod
-    def filter_result(event_data, target):
-
-        for hostname, psanats, ts, status, result  in event_data:
-            if result in target:
-                return hostname, psanats, ts, status, result
-
-        return None
-
-
-    @staticmethod
-    def has_status(event_data, target):
-
-        for hostname, psanats, ts, status, result  in event_data:
-            if status in target:
-                return True
-
-        return False
-
-
-    @staticmethod
-    def filter_status(event_data, target):
-
-        for hostname, psanats, ts, status, result  in event_data:
-            if status in target:
-                return hostname, psanats, ts, status, result
-
-        return None
-
 
     @staticmethod
     def get_time(ts):
@@ -94,6 +48,14 @@ class EventParser(object):
 
 
     def __init__(self, root, file_name):
+
+        self._stages = (
+                "start",
+                "spotfind_start",
+                "index_start",
+                "refine_start",
+                "integrate_start"
+            )
 
         self._valid     = False
         self._file_name = file_name
@@ -107,6 +69,79 @@ class EventParser(object):
 
         with open(os.path.join(self.root, self.file_name)) as f:
             self._lines = f.readlines()
+
+        self.scan_lines()
+        self.scan_index()
+        self.validate_lines()
+
+
+    def scan_lines(self):
+
+        # FMT: (True, is_start, is_end, N, hostname, psanats, ts, status, result)
+        #  OR: (False, -1, line)
+        self._idx = list()
+        for i, line in enumerate(self.lines):
+            line_fields = line.strip().split(',')
+            if len(line_fields) == 5:
+                hostname, psanats, ts, status, result = line_fields
+            else:
+                # I/O error mangled the file => de-validate the entire entry
+                self._idx.append([False, -1, line])
+                continue
+
+            event_start = True if result == "start" else False
+            event_end = True if status in ("stop", "done", "fail") else False
+
+            time_stamp = EventParser.get_time(ts)
+
+            self._idx.append(
+                    [True, event_start, event_end, -1,
+                        hostname, psanats, time_stamp , status, result
+                    ]
+                )
+
+
+    def scan_index(self):
+
+        self._idx_start = list()
+        for i, idx in enumerate(self._idx):
+            if idx[0] and idx[1]:
+                self._idx_start.append(i)
+
+        self._idx_end = list()
+        for idx in self._idx_start[1:]:
+            self._idx_end.append(idx - 1)
+        self._idx_end.append(len(self.lines) - 1)
+
+
+    def validate_event(self, i, n_evt):
+
+        evt_ok = True
+        start  = self._idx_start[i]
+        end    = self._idx_end[i]
+        for j in range(start, end+1):
+            idx = self._idx[j]
+            if not idx[0]:
+                evt_ok = False
+                break
+
+        if not evt_ok:
+            for j in range(start, end+1):
+                self._idx[j][0] = False
+            return 0
+
+        for j in range(start, end+1):
+            self._idx[j][3] = n_evt
+
+        return 1
+
+
+
+    def validate_lines(self):
+
+        n_evt = 0
+        for i in range(len(self._idx_start)):
+            n_evt += self.validate_event(i, n_evt)
 
 
     @property
@@ -143,67 +178,25 @@ class EventParser(object):
 
     def parse(self):
 
-        offset     = 0
-        events_raw = list()
-
-        while True:
-            end_index, parse_ok, event_lines \
-                = EventParser.scan_event(self.lines[offset:])
-
-            if parse_ok:
-                events_raw.append(event_lines)
-
-            # TODO: collect stats on events that could not be parsed
-
-            offset += end_index + 1  # +1 => point the offest at the _next_ index
-            if offset > len(self.lines):
-                break
-
         events = EventStream(self.rank)
 
-        for event_raw in events_raw:
-            result = EventParser.filter_result(event_raw, ("start"))
-            if result is None:
-                continue
-            hostname, psanats, ts_start, status, result = result
-
-            start_time = EventParser.get_time(ts_start)
-
-            status = self.filter_status(event_raw, ("stop", "done", "fail"))
-            if status is None:
+        for i, (start, end) in enumerate(zip(self._idx_start, self._idx_end)):
+            if not self._idx[start][0]:
                 continue
 
-            hostname, psanats, ts_finish, status, result = status
+            start_time = self._idx[start][6]
+            end_time   = self._idx[end][6]
 
-            finish_time = EventParser.get_time(ts_finish)
+            ev = Event(start_time, end_time)
+            ev.hostname = self._idx[start][4]
+            ev.psanats  = self._idx[start][5]
+            ev.status   = self._idx[end][7]
+            ev.result   = self._idx[end][8]
 
-            ev = Event(start_time, finish_time)
-            ev.hostname = hostname
-            ev.psanats  = psanats
-            ev.status   = status
-
-            if EventParser.has_result(event_raw, ("spotfind_start")):
-                hostname, psanats, ts, status, result \
-                    = EventParser.filter_result(event_raw, ("spotfind_start"))
-                ev.spotfind_start = EventParser.get_time(ts)
-
-            if EventParser.has_result(event_raw, ("index_start")):
-                hostname, psanats, ts, status, result \
-                    = EventParser.filter_result(event_raw, ("index_start"))
-                ev.index_start = EventParser.get_time(ts)
-
-            if EventParser.has_result(event_raw, ("refine_start")):
-                hostname, psanats, ts, status, result \
-                    = EventParser.filter_result(event_raw, ("refine_start"))
-                ev.refine_start = EventParser.get_time(ts)
-
-            if EventParser.has_result(event_raw, ("integrate_start")):
-                hostname, psanats, ts, status, result \
-                    = EventParser.filter_result(event_raw, ("integrate_start"))
-                ev.integrate_start = EventParser.get_time(ts)
+            for j, stage_idx in enumerate(range(start+1, end), 1):
+                setattr(ev, self._stages[j], self._idx[stage_idx][6])
 
             ev.lock()
-
             events.add(ev)
 
         # TODO: what will we do with "broken" events?
