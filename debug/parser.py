@@ -13,35 +13,6 @@ from .directory import DirectoryStream
 class EventParser(object):
 
     @staticmethod
-    def scan_event(lines):
-
-        parse_ok    = True
-        end_index   = 0
-        event_lines = list()
-
-        if len(lines) == 0:
-            parse_ok = False
-
-        for i, line in enumerate(lines):
-            line_fields = line.strip().split(',')
-            if len(line_fields) == 5:
-                hostname, psanats, ts, status, result = line_fields
-            else:
-                # I/O error mangled the file => de-validate the entire entry
-                parse_ok = False
-                continue
-
-            event_lines.append((hostname, psanats, ts, status, result))
-
-            if status in ("stop", "done", "fail"):
-                end_index = i
-                break
-
-        return end_index, parse_ok, event_lines
-
-
-
-    @staticmethod
     def get_time(ts):
         sec, ms = reverse_timestamp(ts)
         return sec + ms*1.e-3
@@ -192,6 +163,9 @@ class EventParser(object):
             ev.psanats  = self._idx[start][5]
             ev.status   = self._idx[end][7]
             ev.result   = self._idx[end][8]
+
+            ev.root = self.root
+            ev.rank = self.rank
 
             for j, stage_idx in enumerate(range(start+1, end), 1):
                 setattr(ev, self._stages[j], self._idx[stage_idx][6])
