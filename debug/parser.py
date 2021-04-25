@@ -164,9 +164,6 @@ class EventParser(object):
             ev.status   = self._idx[end][7]
             ev.result   = self._idx[end][8]
 
-            ev.root = self.root
-            ev.rank = self.rank
-
             for j, stage_idx in enumerate(range(start+1, end), 1):
                 setattr(ev, self._stages[j], self._idx[stage_idx][6])
 

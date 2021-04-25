@@ -91,16 +91,16 @@ class EventQueueDB(DebugDB):
         self.__good_eqs       = list()
         self.__good_starts    = list()
         self.__good_finishes  = list()
-        for eq in super().good_eqs:
-            self.__good_eqs.append(EventQueue(eq, True))
+        for eq, rank in zip(super().good_eqs, super().good_ranks):
+            self.__good_eqs.append(EventQueue(eq, True, rank))
             self.__good_starts.append(eq[0])
             self.__good_finishes.append(eq[-1])
 
         self.__fail_eqs       = list()
         self.__fail_starts    = list()
         self.__fail_finishes  = list()
-        for eq in super().fail_eqs:
-            self.__fail_eqs.append(EventQueue(eq, False))
+        for eq, rank in zip(super().fail_eqs, super().fail_ranks):
+            self.__fail_eqs.append(EventQueue(eq, False, rank))
             self.__fail_starts.append(eq[0])
             self.__fail_finishes.append(eq[-1])
 

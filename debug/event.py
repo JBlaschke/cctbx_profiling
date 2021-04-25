@@ -162,27 +162,6 @@ class Event(object):
         else:
             raise WriteToLockedEventError()
 
-    @property
-    def rank(self):
-        return self._rank
-
-
-    @rank.setter
-    def rank(self, value):
-        if not self._locked:
-            self._rank = value
-
-
-    @property
-    def root(self):
-        return self._root
-
-
-    @root.setter
-    def root(self, value):
-        if not self._locked:
-            self._root = value
-
 
     @property
     def event_order(self):
@@ -230,12 +209,6 @@ class Event(object):
 
         if hasattr(self, "result"):
             str_repr += f"\n  +-> result = {self.result}"
-
-        if hasattr(self, "rank"):
-            str_repr += f"\n  +-> rank = {self.rank}"
-
-        if hasattr(self, "root"):
-            str_repr += f"\n  +-> root = {self.root}"
 
         str_repr += f"\n  +-> is locked = {self.locked}"
 
