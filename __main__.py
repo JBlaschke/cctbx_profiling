@@ -1,6 +1,7 @@
 from sys     import argv
 from os      import walk
-from os.path import join, basename
+from os.path import join, basename, relpath
+from shutil  import copytree
 from pickle  import dump
 
 import profiling as prof
@@ -66,7 +67,7 @@ mode = argv[1]
 if mode == 'pickle':
 
     targets = find_debug(argv[2])
-    
+
     over = OverwriteLast()
 
     for i, run in enumerate(targets):
@@ -77,3 +78,21 @@ if mode == 'pickle':
             dump(ds, f)
 
     over.print("Analyzing: Done!")
+    print("")
+
+
+if mode == "archive":
+
+    root    = argv[2]
+    targets = find_debug(root)
+    dest    = argv[3]
+
+    over = OverwriteLast()
+
+    for i, run in enumerate(targets):
+        over.print(f"Copying {i}/{len(targets)}: {run} to {dest}")
+        rp = relpath(run, root)
+        copytree(run, join(dest, rp))
+
+    over.print("Copying: Done!")
+    print("")
