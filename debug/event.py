@@ -22,8 +22,12 @@ class Event(object):
             "integrate_start"
         )
 
-        self._isgood = lambda x: x.status == "done"
+        self._isgood = Event._isgood_fn
 
+
+    @staticmethod
+    def _isgood_fn(x):
+        return x.status == "done"
 
     def lock(self):
         self._locked = True
