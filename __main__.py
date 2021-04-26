@@ -128,13 +128,20 @@ def run_statistics(parser, args):
 
     over = OverwriteLast()
 
-    stats = {
+    stats_start = {
+        "start": 0,
+        "spotfind_start": 0, 
+        "index_start": 0,
+        "refine_start": 0,
+        "integrate_start": 0
+    }
+
+    stats_ok = {
         "start": 0,
         "spotfind_start": 0, 
         "index_start": 0,
         "refine_start": 0,
         "integrate_start": 0,
-        "ok": 0
     }
 
     for i, run in enumerate(targets):
@@ -147,21 +154,26 @@ def run_statistics(parser, args):
 
         for es in ds.event_streams:
             for ev in es:
-                stats["start"] += 1
-                for eo in ev.event_order:
-                    stats[eo] += 1
-                if ev.ok:
-                    stats["ok"] += 1
 
+                stats_start["start"] += 1
+                if ev.ok:
+                    stats_ok["start"] += 1
+
+                for eo in ev.event_order:
+                    stats_start[eo] += 1
+                    if ev.ok:
+                        stats_ok[eo] += 1
 
     over.print("Analyzing: Done!")
     print("")
 
     with open("stats.json", "w") as f:
-        js.dump(stats, f)
+        js.dump({"sarted": stats_start, "ok": stats_ok}, f)
 
-    for elt in stats:
-        print(f"{elt: <16}: {stats[elt]}")
+    for elt in stats_start:
+        start = stats_start[elt]
+        ok = stats_ok[elt]
+        print(f"{elt: <16}: {start}, {ok} {ok/start}")
 
 
 
