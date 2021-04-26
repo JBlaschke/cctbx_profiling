@@ -1,8 +1,9 @@
-from sys     import argv
-from os      import walk
-from os.path import join, basename, relpath
-from shutil  import copytree
-from pickle  import dump
+from sys      import argv
+from os       import walk
+from os.path  import join, basename, relpath
+from shutil   import copytree
+from pickle   import dump
+from argparse import ArgumentParser
 
 import profiling as prof
 
@@ -57,16 +58,13 @@ def analyze_debug(debug_path):
 
 
 
-if len(argv) < 3:
-    raise Exception("I need at least two inputs")
+def run_pickle_debug(parser, args):
+    """
+    Go over debug hireachy, parse the directory streams, and pickle the result
+    in the same directory.
+    """
 
-
-mode = argv[1]
-
-
-if mode == 'pickle':
-
-    targets = find_debug(argv[2])
+    targets = find_debug(args.path)
 
     over = OverwriteLast()
 
@@ -81,11 +79,18 @@ if mode == 'pickle':
     print("")
 
 
-if mode == "archive":
 
-    root    = argv[2]
+def run_archive(parser, args):
+    """
+    Go over the debug hireachy, and copy all debug directories to a new location.
+    """
+
+    parser.add_argument("dest", type=str)
+    args, _ = parser.parse_known_args()
+
+    root    = args.path
     targets = find_debug(root)
-    dest    = argv[3]
+    dest    = args.dest
 
     over = OverwriteLast()
 
@@ -96,3 +101,37 @@ if mode == "archive":
 
     over.print("Copying: Done!")
     print("")
+
+
+
+def run_statistics(parser, args):
+    """
+    Go over the debug hirearchy and compute statistics
+    """
+
+    parser = ArgumentParser()
+
+    parser.add_argument("--pickle", action="store_false")
+    parser.parse_args()
+
+    print(parser.pickle)
+
+
+
+parser = ArgumentParser()
+parser.add_argument("mode", type=str)
+parser.add_argument("path", type=str)
+
+
+args, _ = parser.parse_known_args()
+mode = args.mode
+
+
+if mode == "pickle":
+    run_pickle_debug(parser, args)
+
+if mode == "archive":
+    run_archive(parser, args)
+
+if mode == "statistics":
+    run_statistics(parser, args)
