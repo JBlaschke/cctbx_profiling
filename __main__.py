@@ -2,8 +2,10 @@ from sys      import argv
 from os       import walk
 from os.path  import join, basename, relpath
 from shutil   import copytree
-from pickle   import dump
 from argparse import ArgumentParser
+
+import json   as js
+import pickle as pkl
 
 import profiling as prof
 
@@ -48,13 +50,23 @@ def find_debug(data_root):
 
 def analyze_debug(debug_path):
     """
-    Parse debug filder
+    Parse debug files
     """
 
     parser = prof.debug.DebugParser(debug_path)
     ds     = parser.parse()
 
     return ds
+
+
+
+def load_debug(debug_path):
+    """
+    Load previously parserd debug files
+    """
+
+    with open(join(debug_path, "directory_stream.pkl"), "rb") as f:
+        return pkl.load(f)
 
 
 
@@ -73,7 +85,7 @@ def run_pickle_debug(parser, args):
         ds = analyze_debug(run)
 
         with open(join(run, "directory_stream.pkl"), "wb") as f:
-            dump(ds, f)
+            pkl.dump(ds, f)
 
     over.print("Analyzing: Done!")
     print("")
@@ -109,12 +121,47 @@ def run_statistics(parser, args):
     Go over the debug hirearchy and compute statistics
     """
 
-    parser = ArgumentParser()
+    parser.add_argument("--pickle", action="store_true")
+    args, _ = parser.parse_known_args()
 
-    parser.add_argument("--pickle", action="store_false")
-    parser.parse_args()
+    targets = find_debug(args.path)
 
-    print(parser.pickle)
+    over = OverwriteLast()
+
+    stats = {
+        "start": 0,
+        "spotfind_start": 0, 
+        "index_start": 0,
+        "refine_start": 0,
+        "integrate_start": 0,
+        "ok": 0
+    }
+
+    for i, run in enumerate(targets):
+        over.print(f"Analyzing {i}/{len(targets)}: {run}")
+
+        if args.pickle:
+            ds = load_debug(run)
+        else:
+            ds = analyze_debug(run)
+
+        for es in ds.event_streams:
+            for ev in es:
+                stats["start"] += 1
+                for eo in ev.event_order:
+                    stats[eo] += 1
+                if ev.ok:
+                    stats["ok"] += 1
+
+
+    over.print("Analyzing: Done!")
+    print("")
+
+    with open("stats.json", "w") as f:
+        js.dump(stats, f)
+
+    for elt in stats:
+        print(f"{elt: <16}: {stats[elt]}")
 
 
 
