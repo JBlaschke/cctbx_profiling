@@ -1,6 +1,6 @@
 from sys      import argv
 from os       import walk
-from os.path  import join, basename, relpath
+from os.path  import join, basename, relpath, exists
 from shutil   import copytree
 from argparse import ArgumentParser
 
@@ -48,7 +48,7 @@ def find_debug(data_root):
 
 
 
-def analyze_debug(debug_path):
+def parse_debug(debug_path):
     """
     Parse debug files
     """
@@ -60,13 +60,42 @@ def analyze_debug(debug_path):
 
 
 
+def analyze_debug(ds):
+    """
+    Analyze debug files
+    """
+
+    ddb    = prof.analysis.DebugDB(ds)
+    eqdb   = prof.analysis.EventQueueDB(ds)
+
+    return ddb, eqdb
+
+
+
 def load_debug(debug_path):
     """
     Load previously parserd debug files
     """
 
     with open(join(debug_path, "directory_stream.pkl"), "rb") as f:
-        return pkl.load(f)
+        ds = pkl.load(f)
+
+    with open(join(debug_path, "debug_db.pkl"), "rb") as f:
+        db = pkl.load(f)
+
+    return ds, db["ddb"], db["eqdb"]
+
+
+
+def target_complete(debug_path):
+    """
+    Returns True iff debug_path contains:
+        directory_stream.pkl
+        debug_db.pkl
+    """
+
+    return exists(join(debug_path, "directory_stream.pkl")) \
+            and exists(join(debug_path, "debug_db.pkl"))
 
 
 
@@ -82,10 +111,16 @@ def run_pickle_debug(parser, args):
 
     for i, run in enumerate(targets):
         over.print(f"Analyzing {i}/{len(targets)}: {run}")
-        ds = analyze_debug(run)
 
-        with open(join(run, "directory_stream.pkl"), "wb") as f:
-            pkl.dump(ds, f)
+        if args.overwrite or (not target_complete(run)):
+            ds        = parse_debug(run)
+            ddb, eqdb = analyze_debug(ds)
+
+            with open(join(run, "directory_stream.pkl"), "wb") as f:
+                pkl.dump(ds, f)
+
+            with open(join(run, "debug_db.pkl"), "wb") as f:
+                pkl.dump({"ddb": ddb, "eqdb": eqdb}, f)
 
     over.print("Analyzing: Done!")
     print("")
@@ -130,7 +165,7 @@ def run_statistics(parser, args):
 
     stats_start = {
         "start": 0,
-        "spotfind_start": 0, 
+        "spotfind_start": 0,
         "index_start": 0,
         "refine_start": 0,
         "integrate_start": 0
@@ -138,7 +173,7 @@ def run_statistics(parser, args):
 
     stats_ok = {
         "start": 0,
-        "spotfind_start": 0, 
+        "spotfind_start": 0,
         "index_start": 0,
         "refine_start": 0,
         "integrate_start": 0,
@@ -148,9 +183,9 @@ def run_statistics(parser, args):
         over.print(f"Analyzing {i}/{len(targets)}: {run}")
 
         if args.pickle:
-            ds = load_debug(run)
+            ds, *_ = load_debug(run)
         else:
-            ds = analyze_debug(run)
+            ds = parse_debug(run)
 
         for es in ds.event_streams:
             for ev in es:
@@ -180,7 +215,7 @@ def run_statistics(parser, args):
 parser = ArgumentParser()
 parser.add_argument("mode", type=str)
 parser.add_argument("path", type=str)
-
+parser.add_argument("--overwrite", action="store_true")
 
 args, _ = parser.parse_known_args()
 mode = args.mode
