@@ -40,16 +40,6 @@ class DebugPlot(object):
         _colors = list()
 
         for rank, eq in zip(self.db.good_ranks, self.db.good_eqs):
-            # # assumes that db.good_eqs[:] each have a lenght of 6
-            # _lines += [
-            #     ((eq[0], rank), (eq[1], rank)),
-            #     ((eq[1], rank), (eq[2], rank)),
-            #     ((eq[2], rank), (eq[3], rank)),
-            #     ((eq[3], rank), (eq[4], rank)),
-            #     ((eq[4], rank), (eq[5], rank))
-            # ]
-            # _colors += color_map
-            # cannot assume that db.fail_eqs[:] has a fixed lenght
             for i in range(len(eq) - 1):
                 _lines.append(
                     ((eq[i], rank), (eq[i+1], rank))
