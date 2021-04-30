@@ -9,77 +9,65 @@ from .eq import EventQueue
 class DebugDB(object):
 
     def __init__(self, ds):
-        self.directory_stream = ds
+
+        ds.compute_stats()
+        if not ds.empty:
+            self._reference = ds.first.start
+        else:
+            self._reference = 0.
+
+        ds_data = list()
+
+        for es in ds:
+            for ev in es:
+                ev_start  = ev.start - self._reference
+                ev_steps  = tuple(ev_start + offset for offset in ev.event_offsets)
+                ev_finish = ev.finish - self._reference
+                ev_rank   = es.rank
+                ev_good   = ev.ok
+                ds_data.append((ev_good, ev_rank, ev_start, ev_finish, ev_steps))
+
+        self._data = tuple(ds_data)
 
 
     @property
-    def directory_stream(self):
-        return self._ds
+    def reference(self):
+        return self._reference
 
 
-    @directory_stream.setter
-    def directory_stream(self, value):
-        self._ds = value
-
-        self._ds.compute_stats()
-        if not self._ds.empty:
-            reference = self._ds.first.start
-
-        # build internal database
-        self._good_timers = list()
-        self._good_ranks  = list()
-        self._fail_timers = list()
-        self._fail_ranks  = list()
-        self._good_eqs    = list()
-        self._fail_eqs    = list()
-        for es in self.directory_stream:
-            for ev in es:
-                if ev.ok:
-                    self._good_timers.append(ev.finish - reference)
-                    self._good_ranks.append(es.rank)
-                    eq = [ev.start - reference]
-                    for offset in ev.event_offsets:
-                        eq.append(ev.start - reference + offset)
-                    eq.append(ev.finish - reference)
-                    self._good_eqs.append(eq)
-                else:
-                    self._fail_timers.append(ev.finish - reference)
-                    self._fail_ranks.append(es.rank)
-                    eq = [ev.start - reference]
-                    for offset in ev.event_offsets:
-                        eq.append(ev.start - reference + offset)
-                    eq.append(ev.finish - reference)
-                    self._fail_eqs.append(eq)
+    @property
+    def data(self):
+        return self._data
 
 
     @property
     def good_timers(self):
-        return self._good_timers
+        return tuple(finish for good, _, _, finish, _ in self._data if good)
 
 
     @property
     def fail_timers(self):
-        return self._fail_timers
+        return tuple(finish for good, _, _, finish, _ in self._data if not good)
 
 
     @property
     def good_ranks(self):
-        return self._good_ranks
+        return tuple(rank for good, rank, _, _, _ in self._data if good)
 
 
     @property
     def fail_ranks(self):
-        return self._fail_ranks
+        return tuple(rank for good, rank, _, _, _ in self._data if not good)
 
 
     @property
     def good_eqs(self):
-        return self._good_eqs
+        return tuple(tuple([s, *ss, f]) for g, _, s, f, ss in self._data if g)
 
 
     @property
     def fail_eqs(self):
-        return self._fail_eqs
+        return tuple(tuple([s, *ss, f]) for g, _, s, f, ss in self._data if not g)
 
 
 
