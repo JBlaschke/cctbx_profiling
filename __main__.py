@@ -72,18 +72,13 @@ def analyze_debug(ds):
 
 
 
-def load_debug(debug_path):
+def load_debug(debug_path, file_name):
     """
     Load previously parserd debug files
     """
 
-    with open(join(debug_path, "directory_stream.pkl"), "rb") as f:
-        ds = pkl.load(f)
-
-    with open(join(debug_path, "debug_db.pkl"), "rb") as f:
-        db = pkl.load(f)
-
-    return ds, db["ddb"], db["eqdb"]
+    with open(join(debug_path, f"{file_name}.pkl"), "rb") as f:
+        return pkl.load(f)
 
 
 
@@ -118,6 +113,39 @@ def run_pickle_debug(parser, args):
 
             with open(join(run, "directory_stream.pkl"), "wb") as f:
                 pkl.dump(ds, f)
+
+            with open(join(run, "debug_db.pkl"), "wb") as f:
+                pkl.dump({"ddb": ddb, "eqdb": eqdb}, f)
+
+    over.print("Analyzing: Done!")
+    print("")
+
+
+
+def run_pickle_ddb(parser, args):
+    """
+    Go over debug hireachy, parse the directory streams, and pickle the DebugDB
+    and EventQueueDB objects.
+    """
+
+    parser.add_argument("--pickle", action="store_true")
+    args, _ = parser.parse_known_args()
+
+    targets = find_debug(args.path)
+
+    over = OverwriteLast()
+
+    for i, run in enumerate(targets):
+        over.print(f"Analyzing {i}/{len(targets)}: {run}")
+
+        if args.overwrite or (not exists(join(run, "debug_db.pkl"))):
+
+            if args.pickle:
+                ds = load_debug(run, "directory_stream")
+            else:
+                ds = parse_debug(run)
+
+            ddb, eqdb = analyze_debug(ds)
 
             with open(join(run, "debug_db.pkl"), "wb") as f:
                 pkl.dump({"ddb": ddb, "eqdb": eqdb}, f)
@@ -183,7 +211,7 @@ def run_statistics(parser, args):
         over.print(f"Analyzing {i}/{len(targets)}: {run}")
 
         if args.pickle:
-            ds, *_ = load_debug(run)
+            ds = load_debug(run, "directory_stream")
         else:
             ds = parse_debug(run)
 
@@ -223,6 +251,9 @@ mode = args.mode
 
 if mode == "pickle":
     run_pickle_debug(parser, args)
+
+if mode == "pickle_ddb":
+    run_pickle_ddb(parser, args)
 
 if mode == "archive":
     run_archive(parser, args)
